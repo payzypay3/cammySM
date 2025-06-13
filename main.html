@@ -603,7 +603,7 @@ body.dark-mode .scroll-buttons button:hover {
                 <option value="all">Show All</option>
                 <option value="inStock">In Stock</option>
                 <option value="soldOut">Sold Out</option>
-                <option value="lowStock">Low Stock (&lt;= 15)</option>
+                <option value="lowStock">Low Stock (&lt;= 5)</option>
                 <option value="highSold">High Sold</option>
                 <option value="lowSold">Low Sold</option>
                 <option value="lastEdited">Last Edited (Newest First)</option>
@@ -625,6 +625,7 @@ body.dark-mode .scroll-buttons button:hover {
             <button id="importJsonBtn">Import Inventory (JSON)</button>
             <button id="viewSalesLogBtn" class="btn">View Sales Log</button>
             <button id="printPdfBtn">Print PDF</button>
+           
         </div>
 
         <form id="addItemForm" aria-label="Add new inventory item">
@@ -717,11 +718,21 @@ body.dark-mode .scroll-buttons button:hover {
             <h2>Sales Log</h2>
 
             <div class="filter-controls">
+<div style="margin: 10px 0;">
+    <label for="salesLogPdfRange">Select Range:</label>
+    <select id="salesLogPdfRange">
+        <option value="all">All Sales</option>
+        <option value="last24">Last 24 Hours</option>
+    </select>
+    <button id="generateSalesLogPdfBtn">Save Sales Log to PDF</button>
+</div>
+
                 <label for="salesLogStartDate">From:</label>
                 <input type="date" id="salesLogStartDate">
                 <label for="salesLogEndDate">To:</label>
                 <input type="date" id="salesLogEndDate">
                 <button id="applySalesLogFilter">Apply Filter</button>
+<button id="last24HoursFilterBtn">Last 24 Hours</button>
                 <button id="clearSalesLogFilter">Clear Filter</button>
             </div>
 
@@ -869,7 +880,7 @@ printPdfBtn.onclick = async () => {
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     
-    const headers = ['Item Name', 'In Stock Quantity', 'Date Added'];
+    const headers = ['Item Name', 'In Stock Quantity', 'Total Sold', 'Date Added'];
     headers.forEach(headerText => {
         const th = document.createElement('th');
         th.textContent = headerText;
@@ -900,6 +911,12 @@ printPdfBtn.onclick = async () => {
 
         const tdInStock = document.createElement('td');
         tdInStock.textContent = inStockCount;
+
+        const tdSold = document.createElement('td');
+        tdSold.textContent = item.sold;
+        tdSold.style.padding = '10px';
+        tdSold.style.border = '1px solid #dee2e6';
+        tr.appendChild(tdSold);
         tdInStock.style.padding = '10px';
         tdInStock.style.border = '1px solid #dee2e6';
         tr.appendChild(tdInStock);
@@ -1015,7 +1032,7 @@ function refreshUI() {
     } else if (statusFilter === 'soldOut') {
         displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 0);
     } else if (statusFilter === 'lowStock') { // Low Stock filter logic
-        displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 15);
+        displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 5);
     } else if (statusFilter === 'highSold') {
         displayItems.sort((a, b) => b.sold - a.sold); // Sort by sold quantity (descending)
     } else if (statusFilter === 'lowSold') {
@@ -1663,16 +1680,27 @@ function displaySalesLog(startDate = null, endDate = null) {
         return;
     }
 
-    allSales.forEach(sale => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${sale.itemName}</td>
-            <td>${sale.itemBrand}</td>
-            <td>${sale.quantity}</td>
-            <td>${new Date(sale.timestamp).toLocaleString()}</td>
-        `;
-        salesLogTableBody.appendChild(tr);
-    });
+    
+const mergedMap = {};
+allSales.forEach(sale => {
+    const key = sale.itemName + '|' + sale.itemBrand;
+    if (!mergedMap[key]) {
+        mergedMap[key] = { ...sale };
+    } else {
+        mergedMap[key].quantity += sale.quantity;
+    }
+});
+Object.values(mergedMap).forEach(sale => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>${sale.itemName}</td>
+        <td>${sale.itemBrand}</td>
+        <td>${sale.quantity}</td>
+        <td>-</td>
+    `;
+    salesLogTableBody.appendChild(tr);
+});
+
 }
 
 // Event listener for "View Sales Log" button
@@ -1715,12 +1743,113 @@ clearSalesLogFilterBtn.onclick = () => {
 
 
 // Initial load
+
+// Event listener for last 24 hours filter
+document.getElementById('last24HoursFilterBtn').onclick = () => {
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    displaySalesLog(yesterday, now);
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     loadDarkModeSetting();
     refreshUI();
+
+document.getElementById('generateSalesLogPdfBtn').onclick = async () => {
+    const range = document.getElementById('salesLogPdfRange').value;
+    const now = new Date();
+    const last24 = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    const pdfContent = document.createElement('div');
+    const title = document.createElement('h2');
+    title.textContent = 'Sales Log Report (' + (range === 'last24' ? 'Last 24 Hours' : 'All') + ')';
+    title.style.textAlign = 'center';
+    title.style.margin = '20px 0';
+    pdfContent.appendChild(title);
+
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
+
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    ['Item Name', 'Brand', 'Total Sold'].forEach(text => {
+        const th = document.createElement('th');
+        th.textContent = text;
+        th.style.border = '1px solid #ccc';
+        th.style.padding = '8px';
+        th.style.background = '#007bff';
+        th.style.color = '#fff';
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    const mergedSales = {};
+
+    items.forEach(item => {
+        const key = item.name + '|' + item.brand;
+
+        let relevantSales = [];
+if (item.saleHistory && Array.isArray(item.saleHistory)) {
+    if (range === 'last24') {
+        relevantSales = item.saleHistory.filter(sale => new Date(sale.timestamp) >= last24);
+    } else {
+        relevantSales = item.saleHistory; // include all
+    }
+}
+        const quantity = relevantSales.reduce((sum, s) => sum + s.quantity, 0);
+
+        if (quantity > 0) {
+            mergedSales[key] = { name: item.name, brand: item.brand, quantity };
+        }
+    });
+
+    Object.values(mergedSales).forEach(row => {
+        const tr = document.createElement('tr');
+        [row.name, row.brand, row.quantity].forEach(text => {
+            const td = document.createElement('td');
+            td.textContent = text;
+            td.style.border = '1px solid #ccc';
+            td.style.padding = '8px';
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    pdfContent.appendChild(table);
+    document.body.appendChild(pdfContent);
+
+    await html2pdf().set({
+        filename: 'sales_log_' + range + '.pdf',
+        margin: 10,
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(pdfContent).save();
+
+    document.body.removeChild(pdfContent);
+};
+
+
     // Set up hourly refresh for the dashboard stats
     setInterval(updateDashboard, 60 * 60 * 1000); // Refresh every 1 hour (60 minutes * 60 seconds * 1000 milliseconds)
 });
 </script>
+
+<script>
+document.getElementById('salesLogPdfRange').addEventListener('change', () => {
+    const range = document.getElementById('salesLogPdfRange').value;
+    const now = new Date();
+    if (range === 'last24') {
+        const last24 = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        displaySalesLog(last24, now);
+    } else {
+        displaySalesLog();
+    }
+});
+</script>
+
 </body>
 </html>
