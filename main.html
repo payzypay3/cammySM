@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,448 +9,588 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=ABeeZee:ital@0;1&family=Ancizar+Sans:ital,wght@0,100..1000;1,100..1000&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg-light: #f5f7fa;
-    --bg-dark: #121212;
-    --text-light: #333;
-    --text-dark: #eee;
-    --primary: #007bff;
-    --danger: #dc3545;
-    --success: #28a745;
-    --warning: #ffc107;
-    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-  body {
-    margin: 0; padding: 0;
-    font-family: var(--font-family);
-    background: var(--bg-light);
-    color: var(--text-light);
-    transition: background-color 0.3s, color 0.3s;
-  }
-  body.dark {
-    background: var(--bg-dark);
-    color: var(--text-dark);
-  }
-  h1 {
-    text-align: center;
-    margin: 1rem 0;
-  }
-  .container {
-    max-width: 1100px;
-    margin: auto;
-    padding: 1rem;
-  }
-  /* Filter section */
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    align-items: center;
-  }
-  legend{
-    font-family: "ABeeZee", sans-serif;
-  }
+:root {
+  --bg-light: #f5f7fa;
+  --bg-dark: #121212;
+  --text-light: #333;
+  --text-dark: #eee;
+  --primary: #007bff;
+  --danger: #dc3545;
+  --success: #28a745;
+  --warning: #ffc107;
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+body {
+  margin: 0; padding: 0;
+  font-family: var(--font-family);
+  background: var(--bg-light);
+  color: var(--text-light);
+  transition: background-color 0.3s, color 0.3s;
+}
+body.dark {
+  background: var(--bg-dark);
+  color: var(--text-dark);
+}
+h1 {
+  text-align: center;
+  margin: 1rem 0;
+}
+.container {
+  max-width: 1400px; /* Increased width */
+  margin: auto;
+  padding: 1rem;
+}
+/* Filter section */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+legend{
+  font-family: "ABeeZee", sans-serif;
+}
 
 
 footer{
-    background-color: rgb(6, 93, 255);
-    height: 50px;
-    text-align: center;
-    color: white;
-   
-    
+  background-color: rgb(6, 93, 255);
+  height: 50px;
+  text-align: center;
+  color: white;
+
+
 }
-  label{
-    font-family: "ABeeZee", sans-serif;
-  }
-  .filters label {
-    font-weight: 600;
-  }
-  .filters input[type="text"], .filters select {
-    padding: 0.4rem 0.6rem;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    transition: border-color 0.2s;
-  }
-  .filters input[type="text"]:focus, .filters select:focus {
-    outline: none;
-    border-color: var(--primary);
-  }
-  /* Table styles */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 1rem;
-  }
-  thead {
-    background: var(--primary);
-    color: white;
-  }
-  body.dark thead {
-    background: #0056b3;
-  }
-  th, td {
-    padding: 0.6rem 0.8rem;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-  }
-  body.dark th, body.dark td {
-    border-color: #444;
-  }
-
-  body.dark tr:hover {
-    background: #333;
-  }
-
-
-tr.low-stock {
-  background-color: var(--danger) !important; /* This will be overridden by the specific yellow below */
+label{
+  font-family: "ABeeZee", sans-serif;
+}
+.filters label {
+  font-weight: 600;
+}
+.filters input[type="text"], .filters select {
+  padding: 0.4rem 0.6rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  transition: border-color 0.2s;
+}
+.filters input[type="text"]:focus, .filters select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+/* Table styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+thead {
+  background: var(--primary);
   color: white;
 }
-body.dark tr.low-stock {
-  background-color: #fbff00 !important; /* Changed to yellow for dark mode */
-  color: #333 !important; /* Ensure text is visible on yellow */
+body.dark thead {
+  background: #0056b3;
 }
-tr.low-stock { /* Added for light mode to ensure yellow highlight */
-    background-color: yellow !important;
-    color: black !important;
+th, td {
+  padding: 0.8rem 1rem; /* Increased padding */
+  text-align: left;
+  border-bottom: 1px solid #ddd;
 }
-
-/* Styles for general table rows */
-#itemTableBody tr {
-    /* Your default row styles */
+body.dark th, body.dark td {
+  border-color: #444;
 }
 
-/* Styles for low stock (yellow) */
+body.dark tr:hover {
+  background: #333;
+}
+
+/* Styles for low stock (yellow) - between 1 and 5 */
 #itemTableBody tr.low-stock {
-    background-color: #ffff49; /* Light yellow */
+    background-color: #ffc107; /* Light yellow */
+    color: #333; /* Darker text for contrast on yellow */
+}
+body.dark #itemTableBody tr.low-stock {
+    background-color: #e0a800; /* Darker yellow for dark mode */
+    color: white;
 }
 
-/* Styles for critical low stock (red) - this rule should come AFTER .low-stock */
+/* Styles for critical low stock (red) - 0 or less. This rule must come AFTER .low-stock for proper override */
 #itemTableBody tr.critical-low-stock {
     background-color: #ff5b5b; /* Light red */
+    color: white;
+}
+body.dark #itemTableBody tr.critical-low-stock {
+    background-color: #dc3545; /* Darker red for dark mode */
+    color: white;
 }
 
-    input[type="text"]{
-    border-radius: 5px;
-    height: 30px;
-    margin-bottom: 5px;
-   }
+  input[type="text"]{
+  border-radius: 5px;
+  height: 30px;
+  margin-bottom: 5px;
+ }
 
 
-  /* Buttons */
-  button {
-    cursor: pointer;
-    border: none;
-    padding: 4px 8px;
-    margin: 0 2px;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    transition: background-color 0.2s;
-  }
-  button.edit {
-    background: var(--primary);
-    color: white;
-  }
-  button.edit-qty { /* New style for edit quantity button */
-    background: #009688; /* A teal color */
-    color: white;
-  }
-    button.edit-sold { /* New style for edit quantity button */
-    background: #ff6600; /* A teal color */
-    color: white;
-  }
-  button.delete {
-    background: var(--danger);
-    color: white;
-  }
-  button.duplicate {
-    background: var(--warning);
-    color: #333;
-  }
-  button.sold-inc, button.sold-dec {
-    background: var(--success);
-    color: white;
-    font-weight: 700;
-  }
-  button.sold-dec {
-    background: #28a745cc;
-  }
-  button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+/* Buttons */
+button {
+  cursor: pointer;
+  border: none;
+  padding: 4px 8px;
+  margin: 0 2px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+button.edit {
+  background: var(--primary);
+  color: white;
+}
+button.edit-qty { /* New style for edit quantity button */
+  background: #009688; /* A teal color */
+  color: white;
+}
+  button.edit-sold { /* New style for edit quantity button */
+  background: #ff6600; /* A teal color */
+  color: white;
+}
+button.delete {
+  background: var(--danger);
+  color: white;
+}
+button.duplicate {
+  background: var(--warning);
+  color: #333;
+}
+button.sold-inc, button.sold-dec {
+  background: var(--success);
+  color: white;
+  font-weight: 700;
+}
+button.sold-dec {
+  background: #28a745cc;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
-  
 
-  input[type="number"]{
-    border-radius: 5px;
-    height: 30px;
+
+input[type="number"]{
+  border-radius: 5px;
+  height: 30px;
+}
+/* Dashboard */
+.dashboard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem; /* Increased gap */
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+.dashboard .card {
+  background: white;
+  flex: 1 1 200px; /* Increased base size */
+  min-width: 200px; /* Ensured minimum width */
+  padding: 1.2rem; /* Increased padding */
+  border-radius: 8px;
+  box-shadow: 0 0 10px #ccc;
+  text-align: center;
+}
+body.dark .dashboard .card {
+  background: #222;
+  box-shadow: 0 0 10px #000;
+}
+.dashboard .card h2 {
+  margin: 0 0 0.7rem; /* Adjusted margin */
+  font-size: 1.4rem; /* Increased font size */
+}
+.dashboard .card p {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.6rem; /* Increased font size */
+}
+/* Charts container */
+.charts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+.chart-card {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #ccc;
+  width: 320px;
+}
+body.dark .chart-card {
+  background: #222;
+  box-shadow: 0 0 10px #000;
+}
+/* Dark mode toggle button */
+#modeToggleBtn {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: var(--primary);
+  border-radius: 50%;
+  width: 40px; height: 40px;
+  font-size: 20px;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  z-index: 1000;
+}
+#modeToggleBtn:hover {
+  background: #0056b3;
+}
+/* New buttons styling */
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.action-buttons button {
+  padding: 8px 15px;
+  font-size: 1rem;
+  border-radius: 5px;
+}
+
+#downloadZipBtn {
+  background-color: #6c757d; /* Gray */
+  color: white;
+}
+
+#downloadZipBtn:hover {
+  background-color: #5a6268;
+}
+
+#importJsonBtn {
+  background-color: #17a2b8; /* Cyan */
+  color: white;
+}
+
+#importJsonBtn:hover {
+  background-color: #138496;
+}
+
+#printPdfBtn {
+  background-color: #dc3545; /* Red for print */
+  color: white;
+}
+
+#printPdfBtn:hover {
+  background-color: #c82333;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
   }
-  /* Dashboard */
   .dashboard {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
   }
-  .dashboard .card {
-    background: white;
-    flex: 1 1 150px;
-    min-width: 140px;
-    padding: 1rem;
-    border-radius: 8px;
-    box-shadow: 0 0 10px #ccc;
-    text-align: center;
-  }
-  body.dark .dashboard .card {
-    background: #222;
-    box-shadow: 0 0 10px #000;
-  }
-  .dashboard .card h2 {
-    margin: 0 0 0.5rem;
-    font-size: 1.3rem;
-  }
-  .dashboard .card p {
-    margin: 0;
-    font-weight: 700;
-    font-size: 1.4rem;
-  }
-  /* Charts container */
   .charts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    justify-content: center;
-    margin-bottom: 2rem;
+    flex-direction: column;
+    align-items: center;
   }
   .chart-card {
-    background: white;
-    padding: 1rem;
+    width: 100%;
+    max-width: 400px;
+  }
+  .action-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  /* Make buttons stack vertically for smaller screens */
+  .item-actions button {
+    display: block;
+    width: 100%;
+    margin-bottom: 5px; /* Add some space between stacked buttons */
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .item-actions {
+    display: flex; /* Override display: flex; to allow stacking */
+    flex-direction: column;
+    gap: 5px; /* Ensure consistent spacing */
+    align-items: stretch;
+  }
+}
+
+.container h1{
+  font-family: "ABeeZee", sans-serif;
+ font-weight: bold;
+ font-size: 2.5rem;
+
+}
+
+/* PDF specific styles */
+@media print {
+  /* Ensure page breaks before these sections */
+  .dashboard, .charts {
+    page-break-before: always;
+  }
+  /* Adjust margins for PDF */
+  body {
+    margin: 0.5in !important; /* Adjust as needed */
+  }
+}
+
+button[type="submit"]{
+  background-color: rgb(0, 183, 255);
+  color: white;
+  border-radius: 5px;
+  height: 30px;
+
+}
+
+/* Styles for the Edit Item Modal */
+#editItemModal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1001; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+#editItemModal > div {
+    background-color: var(--bg-light); /* Use theme variable for background */
+    margin: 10% auto; /* 10% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+    max-width: 500px; /* Max width for larger screens */
     border-radius: 8px;
-    box-shadow: 0 0 10px #ccc;
-    width: 320px;
-  }
-  body.dark .chart-card {
-    background: #222;
-    box-shadow: 0 0 10px #000;
-  }
-  /* Dark mode toggle button */
-  #modeToggleBtn {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+body.dark #editItemModal > div {
+    background-color: var(--bg-dark); /* Dark mode background */
+    color: var(--text-dark); /* Changed to text-dark for consistency */
+
+}
+
+
+#editItemModal input[type="text"],
+#editItemModal input[type="number"] {
+    width: calc(100% - 16px); /* Account for padding */
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: var(--bg-light); /* Use theme variable for input background */
+    color: var(--text-light); /* Use theme variable for input text color */
+}
+
+body.dark #editItemModal input[type="text"],
+body.dark #editItemModal input[type="number"] {
+    background-color: #333; /* Darker input background for dark mode */
+    border-color: #555;
+    color: var(--text-dark);
+}
+input[type="date"]{
+  margin-left: 20px;
+  height: 30px;
+  border-radius: 5px;
+ border: 1px solid #ccc;
+
+
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+body.dark .close-button {
+    color: #eee;
+}
+
+body.dark .close-button:hover,
+body.dark .close-button:focus {
+    color: white;
+}
+
+
+
+
+
+/* Basic Modal Styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be responsive */
+    max-width: 800px; /* Max width for larger screens */
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+    animation-name: animatetop;
+    animation-duration: 0.4s
+}
+
+.modal-content.dark {
+    background-color: #333;
+    color: #eee;
+    border-color: #555;
+}
+
+/* Close Button */
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.dark .close-button {
+    color: #bbb;
+}
+.dark .close-button:hover,
+.dark .close-button:focus {
+    color: white;
+}
+
+/* Sales Log Specific Styles */
+.sales-log-filters {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+.sales-log-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.sales-log-table th,
+.sales-log-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.sales-log-table th {
+    background-color: #f2f2f2;
+}
+
+.dark .sales-log-table th {
+    background-color: #555;
+}
+.dark .sales-log-table,
+.dark .sales-log-table th,
+.dark .sales-log-table td {
+    border-color: #777;
+}
+
+/* Animations */
+@keyframes animatetop {
+    from {top: -300px; opacity: 0}
+    to {top: 0; opacity: 1}
+}
+
+
+/* Scroll Buttons */
+.scroll-buttons {
     position: fixed;
-    top: 10px;
-    right: 10px;
-    background: var(--primary);
-    border-radius: 50%;
-    width: 40px; height: 40px;
-    font-size: 20px;
+    bottom: 20px; /* Adjust as needed */
+    right: 20px; /* Adjust as needed */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000; /* Ensure buttons are above other content */
+}
+
+.scroll-buttons button {
+    background-color: var(--primary); /* Uses your defined primary color */
     color: white;
     border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s;
-    z-index: 1000;
-  }
-  #modeToggleBtn:hover {
-    background: #0056b3;
-  }
-  /* New buttons styling */
-  .action-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-
-  .action-buttons button {
-    padding: 8px 15px;
     font-size: 1rem;
-    border-radius: 5px;
-  }
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease;
+}
 
-  #downloadZipBtn {
-    background-color: #6c757d; /* Gray */
-    color: white;
-  }
+.scroll-buttons button:hover {
+    background-color: var(--primary-dark); /* Assuming you have a darker shade for hover */
+    /* If you don't have --primary-dark, you can use a fixed color like #0056b3 */
+}
 
-  #downloadZipBtn:hover {
-    background-color: #5a6268;
-  }
+/* Dark mode adjustments for scroll buttons */
+body.dark-mode .scroll-buttons button {
+    background-color: #555; /* Darker background for dark mode */
+    color: #eee;
+}
 
-  #importJsonBtn {
-    background-color: #17a2b8; /* Cyan */
-    color: white;
-  }
+body.dark-mode .scroll-buttons button:hover {
+    background-color: #777;
+}
 
-  #importJsonBtn:hover {
-    background-color: #138496;
-  }
 
-  #printPdfBtn {
-    background-color: #dc3545; /* Red for print */
-    color: white;
-  }
-
-  #printPdfBtn:hover {
-    background-color: #c82333;
-  }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    .filters {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    .dashboard {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    .charts {
-      flex-direction: column;
-      align-items: center;
-    }
-    .chart-card {
-      width: 100%;
-      max-width: 400px;
-    }
-    .action-buttons {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    /* Make buttons stack vertically for smaller screens */
-    .item-actions button {
-      display: block;
-      width: 100%;
-      margin-bottom: 5px; /* Add some space between stacked buttons */
-      margin-left: 0;
-      margin-right: 0;
-    }
-    .item-actions {
-      display: flex; /* Override display: flex; to allow stacking */
-      flex-direction: column;
-      gap: 5px; /* Ensure consistent spacing */
-      align-items: stretch;
-    }
-  }
-
-  .container h1{
-    font-family: "ABeeZee", sans-serif;
-   font-weight: bold;
-   font-size: 2.5rem;
-   
-  }
-
-  /* PDF specific styles */
-  @media print {
-    /* Ensure page breaks before these sections */
-    .dashboard, .charts {
-      page-break-before: always;
-    }
-    /* Adjust margins for PDF */
-    body {
-      margin: 0.5in !important; /* Adjust as needed */
-    }
-  }
-
-  button[type="submit"]{
-    background-color: rgb(0, 183, 255);
-    color: white;
-    border-radius: 5px;
-    height: 30px;
-
-  }
-
-  /* Styles for the Edit Item Modal */
-  #editItemModal {
-      display: none; /* Hidden by default */
-      position: fixed; /* Stay in place */
-      z-index: 1001; /* Sit on top */
-      left: 0;
-      top: 0;
-      width: 100%; /* Full width */
-      height: 100%; /* Full height */
-      overflow: auto; /* Enable scroll if needed */
-      background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-  }
-
-  #editItemModal > div {
-      background-color: var(--bg-light); /* Use theme variable for background */
-      margin: 10% auto; /* 10% from the top and centered */
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%; /* Could be more or less, depending on screen size */
-      max-width: 500px; /* Max width for larger screens */
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  }
-
-  body.dark #editItemModal > div {
-      background-color: var(--bg-dark); /* Dark mode background */
-      color: var(--text-white);
-   
-  }
-
-  
-
-  #editItemModal input[type="text"],
-  #editItemModal input[type="number"] {
-      width: calc(100% - 12px); /* Account for padding */
-      padding: 8px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      background-color: var(--bg-light); /* Use theme variable for input background */
-      color: var(--text-light); /* Use theme variable for input text color */
-  }
-
-  body.dark #editItemModal input[type="text"],
-  body.dark #editItemModal input[type="number"] {
-      background-color: #333; /* Darker input background for dark mode */
-      border-color: #555;
-      color: var(--text-dark);
-  }
-  input[type="date"]{
-    margin-left: 20px;
-    height: 30px;
-    border-radius: 5px;
-   border: 1px solid #ccc;
-
-  
-  }
-
-  .close-button {
-      color: #aaa;
-      float: right;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-  }
-
-  .close-button:hover,
-  .close-button:focus {
-      color: #000;
-      text-decoration: none;
-      cursor: pointer;
-  }
-
-  body.dark .close-button {
-      color: #eee;
-  }
-
-  body.dark .close-button:hover,
-  body.dark .close-button:focus {
-      color: white;
-  }
 </style>
 </head>
 <body>
-    <button id="modeToggleBtn" aria-label="Toggle Dark Mode">🌙</button>
+<button id="modeToggleBtn" aria-label="Toggle Dark Mode">🌙</button>
+
+
+<div class="scroll-buttons">
+    <button id="scrollToTopBtn" title="Scroll to Top">&#9650; Top</button>
+    <button id="scrollToBottomBtn" title="Scroll to Bottom">&#9660; Bottom</button>
+</div>
+
     <header>
         <h1>Inventory Management Dashboard</h1>
     </header>
-    <div class="container">
+
+    <div class="container" id="main-content-area">
         <div class="filters" aria-label="Filter inventory items">
             <label for="filterName">Name:</label>
             <input type="text" id="filterName" placeholder="Search by name" />
@@ -459,51 +598,53 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
             <label for="filterBrand">Brand:</label>
             <input type="text" id="filterBrand" placeholder="Search by brand" />
 
-<label for="filterStatus">Status:</label>
-<select id="filterStatus" aria-label="Filter by stock status">
-    <option value="all">Show All</option>
-    <option value="inStock">In Stock</option>
-    <option value="soldOut">Sold Out</option>
-    <option value="lowStock">Low Stock (<= 15)</option>
-    <option value="highSold">High Sold</option>
-    <option value="lowSold">Low Sold</option>
-    <option value="lastEdited">Last Edited (Newest First)</option>
-    <option value="lastSold">Last Sold (Newest First)</option> </select>
+            <label for="filterStatus">Status:</label>
+            <select id="filterStatus" aria-label="Filter by stock status">
+                <option value="all">Show All</option>
+                <option value="inStock">In Stock</option>
+                <option value="soldOut">Sold Out</option>
+                <option value="lowStock">Low Stock (&lt;= 15)</option>
+                <option value="highSold">High Sold</option>
+                <option value="lowSold">Low Sold</option>
+                <option value="lastEdited">Last Edited (Newest First)</option>
+                <option value="lastSold">Last Sold (Newest First)</option>
+            </select>
 
             <div class="date">
-            <label for="filterStartDate">Start Date:</label>
-            <input type="date" id="filterStartDate" />
+                <label for="filterStartDate">Start Date:</label>
+                <input type="date" id="filterStartDate" />
 
-            <label for="filterEndDate">End Date:</label>
-            <input type="date" id="filterEndDate" />
+                <label for="filterEndDate">End Date:</label>
+                <input type="date" id="filterEndDate" />
+            </div>
         </div>
-    </div>
 
         <div class="action-buttons">
             <button id="downloadZipBtn">Download Inventory (ZIP)</button>
             <input type="file" id="importJsonFile" accept=".json" style="display: none;">
             <button id="importJsonBtn">Import Inventory (JSON)</button>
+            <button id="viewSalesLogBtn" class="btn">View Sales Log</button>
             <button id="printPdfBtn">Print PDF</button>
         </div>
 
         <form id="addItemForm" aria-label="Add new inventory item">
-    <fieldset>
-        <legend>Add New Item</legend>
-        <label>
-            Item Name: <input type="text" id="itemName" required />
-        </label>
-        <label>
-            Brand: <input type="text" id="brand" required />
-        </label>
-        <label>
-            Total Quantity: <input type="number" id="totalQuantity" min="1" required />
-        </label>
-        <label>
-            Sold: <input type="number" id="sold" min="0" value="0" required />
-        </label>
-        <button type="submit">Add Item</button>
-    </fieldset>
-</form>
+            <fieldset>
+                <legend>Add New Item</legend>
+                <label>
+                    Item Name: <input type="text" id="itemName" required />
+                </label>
+                <label>
+                    Brand: <input type="text" id="brand" required />
+                </label>
+                <label>
+                    Total Quantity: <input type="number" id="totalQuantity" min="1" required />
+                </label>
+                <label>
+                    Sold: <input type="number" id="sold" min="0" value="0" required />
+                </label>
+                <button type="submit">Add Item</button>
+            </fieldset>
+        </form>
 
         <table aria-label="Inventory items table" id="itemTable" role="grid">
             <thead>
@@ -513,7 +654,8 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
                     <th>Qty</th>
                     <th>Sold</th>
                     <th>In Stock</th>
-                    <th>Date Added</th>
+                    <th>Last Sold</th>
+                    <th>Last Edited</th>
                     <th>Actions Edit</th>
                 </tr>
             </thead>
@@ -525,6 +667,8 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
             <div class="card"><h2>Total Quantity</h2><p id="totalQuantityCount">0</p></div>
             <div class="card"><h2>Total Sold</h2><p id="totalSoldCount">0</p></div>
             <div class="card"><h2>In Stock</h2><p id="totalInStockCount">0</p></div>
+            <div class="card"><p>Sold (Last 1 Hr)<br>
+                <span id="totalSoldLast24HoursCount">0</span></p></div>
         </section>
 
         <section class="charts" aria-label="Sales charts">
@@ -537,9 +681,7 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
                 <canvas id="soldItemsPieChart"></canvas>
             </div>
         </section>
-    </div>
-
-    <div id="editItemModal" style="display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+    </div> <div id="editItemModal" style="display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
         <div style="background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
             <span class="close-button" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
             <h2 style="text-align: center; margin-top: 0; font-family: 'ABeeZee', sans-serif;">Edit Item Details</h2>
@@ -569,15 +711,49 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
         </div>
     </div>
 
+    <div id="salesLogModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Sales Log</h2>
+
+            <div class="filter-controls">
+                <label for="salesLogStartDate">From:</label>
+                <input type="date" id="salesLogStartDate">
+                <label for="salesLogEndDate">To:</label>
+                <input type="date" id="salesLogEndDate">
+                <button id="applySalesLogFilter">Apply Filter</button>
+                <button id="clearSalesLogFilter">Clear Filter</button>
+            </div>
+
+            <table class="inventory-table sales-log-table">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Brand</th>
+                        <th>Quantity Sold</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="salesLogTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
     <footer>
         <p>&copy; Developed by Shane Computers.</p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script>
-// Helper function for displaying modal messages
+   <script>
+
+
+
+// Helper function for displaying modal messages (already present)
 function showModalMessage(message) {
     const messageBox = document.createElement('div');
     messageBox.className = 'modal-message';
@@ -594,7 +770,7 @@ const itemTableBody = document.getElementById('itemTableBody');
 const totalItemsCount = document.getElementById('totalItemsCount');
 const totalQuantityCount = document.getElementById('totalQuantityCount');
 const totalSoldCount = document.getElementById('totalSoldCount');
-const totalInStockCount = document.getElementById('totalInStockCount'); // Corrected typo here (removed extra '= document')
+const totalInStockCount = document.getElementById('totalInStockCount');
 const totalValueCount = document.getElementById('totalValueCount'); // This will now show Total Revenue
 const monthlySoldBarChartCtx = document.getElementById('monthlySoldBarChart').getContext('2d');
 const soldItemsPieChartCtx = document.getElementById('soldItemsPieChart').getContext('2d');
@@ -612,7 +788,7 @@ const filterEndDateInput = document.getElementById('filterEndDate');
 const downloadZipBtn = document.getElementById('downloadZipBtn');
 const importJsonFile = document.getElementById('importJsonFile');
 const importJsonBtn = document.getElementById('importJsonBtn');
-const printPdfBtn = document.getElementById('printPdfBtn');
+const printPdfBtn = document.getElementById('printPdfBtn'); // Assuming this button exists in HTML for future PDF functionality
 
 // Edit Item Modal elements
 const editItemModal = document.getElementById('editItemModal');
@@ -625,7 +801,19 @@ const editItemName = document.getElementById('editItemName');
 const editBrand = document.getElementById('editBrand');
 const editTotalQuantity = document.getElementById('editTotalQuantity');
 const editSold = document.getElementById('editSold');
-// Removed references to editPrice and editDateAdded as they are no longer in the modal
+
+// Dashboard element for total sold in last 24 hours (now last 1 hour)
+const totalSoldLast24HoursCount = document.getElementById('totalSoldLast24HoursCount'); // Consider renaming HTML ID to totalSoldLast1HourCount
+
+// --- NEW SALES LOG ELEMENTS ---
+const viewSalesLogBtn = document.getElementById('viewSalesLogBtn');
+const salesLogModal = document.getElementById('salesLogModal');
+const closeSalesLogButton = salesLogModal.querySelector('.close-button');
+const salesLogTableBody = document.getElementById('salesLogTableBody');
+const salesLogStartDateInput = document.getElementById('salesLogStartDate');
+const salesLogEndDateInput = document.getElementById('salesLogEndDate');
+const applySalesLogFilterBtn = document.getElementById('applySalesLogFilter');
+const clearSalesLogFilterBtn = document.getElementById('clearSalesLogFilter');
 
 // Data storage
 let items = JSON.parse(localStorage.getItem('inventoryItems')) || [];
@@ -644,6 +832,151 @@ let soldItemsPieChart = null;
 function saveItems() {
     localStorage.setItem('inventoryItems', JSON.stringify(items));
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+printPdfBtn.onclick = async () => {
+    showModalMessage('Attempting to generate PDF... Please wait.');
+
+    const pdfContent = document.createElement('div');
+    // Removed pdfContent.style.padding = '20mm'; to eliminate internal padding
+
+    const reportTitle = document.createElement('h1');
+    reportTitle.textContent = `Inventory In-Stock Report - ${new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}`;
+    reportTitle.style.textAlign = 'center';
+    reportTitle.style.marginBottom = '20px';
+    // Adjust margin-top for the title if needed, to bring it closer to the top edge of the PDF
+    reportTitle.style.marginTop = '0'; // Ensure no default top margin from H1
+    pdfContent.appendChild(reportTitle);
+
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
+    table.style.marginTop = '0'; // Ensure no default top margin from table
+    
+    // ... (rest of your table creation logic remains the same) ...
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
+    const headers = ['Item Name', 'In Stock Quantity', 'Date Added'];
+    headers.forEach(headerText => {
+        const th = document.createElement('th');
+        th.textContent = headerText;
+        th.style.backgroundColor = '#007bff';
+        th.style.color = 'white';
+        th.style.padding = '10px';
+        th.style.border = '1px solid #dee2e6';
+        th.style.textAlign = 'left';
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    filteredItemsForDisplay.forEach(item => {
+        const tr = document.createElement('tr');
+        const inStockCount = item.totalQuantity - item.sold;
+
+        if (tbody.children.length % 2 === 0) {
+            tr.style.backgroundColor = '#f2f2f2';
+        }
+
+        const tdName = document.createElement('td');
+        tdName.textContent = item.name;
+        tdName.style.padding = '10px';
+        tdName.style.border = '1px solid #dee2e6';
+        tr.appendChild(tdName);
+
+        const tdInStock = document.createElement('td');
+        tdInStock.textContent = inStockCount;
+        tdInStock.style.padding = '10px';
+        tdInStock.style.border = '1px solid #dee2e6';
+        tr.appendChild(tdInStock);
+
+        const tdDateAdded = document.createElement('td');
+        const dateAdded = new Date(item.dateAdded);
+        tdDateAdded.textContent = dateAdded.toLocaleDateString('en-US');
+        tdDateAdded.style.padding = '10px';
+        tdDateAdded.style.border = '1px solid #dee2e6';
+        tr.appendChild(tdDateAdded);
+
+        tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    pdfContent.appendChild(table);
+
+
+    document.body.appendChild(pdfContent); // Temporarily add for html2pdf
+
+    const options = {
+        margin: 0, // Set margin to 0 for no blanking at the top/sides
+        filename: 'inventory_in_stock_report.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+            scale: 2,
+            logging: true,
+            useCORS: true
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    try {
+        await html2pdf().set(options).from(pdfContent).save();
+        showModalMessage('PDF generated and downloaded successfully!');
+    } catch (error) {
+        console.error('PDF Generation Error:', error);
+        showModalMessage(`Failed to generate PDF: ${error.message || 'An unknown error occurred.'}. Check console for details.`);
+    } finally {
+        if (pdfContent && pdfContent.parentNode) {
+            pdfContent.parentNode.removeChild(pdfContent);
+        }
+    }
+};
+
+
+
+
+
+
+// Get references to the new scroll buttons
+const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+
+// Add event listener for scroll to top button
+if (scrollToTopBtn) {
+    scrollToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth' // Smooth scrolling animation
+        });
+    });
+}
+
+// Add event listener for scroll to bottom button
+if (scrollToBottomBtn) {
+    scrollToBottomBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: document.body.scrollHeight, // Scrolls to the very bottom of the document
+            behavior: 'smooth' // Smooth scrolling animation
+        });
+    });
+}
+
+
+
+
+
 
 // Filter & refresh UI function
 function refreshUI() {
@@ -668,7 +1001,7 @@ function refreshUI() {
         const matchesName = item.name.toLowerCase().includes(nameFilter);
         const matchesBrand = item.brand.toLowerCase().includes(brandFilter);
 
-        // Date range filtering logic
+        // Date range filtering logic based on dateAdded
         const itemDate = new Date(item.dateAdded);
         if (startDate && itemDate < startDate) return false;
         if (endDate && itemDate > endDate) return false;
@@ -682,7 +1015,7 @@ function refreshUI() {
     } else if (statusFilter === 'soldOut') {
         displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 0);
     } else if (statusFilter === 'lowStock') { // Low Stock filter logic
-        displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 15); // Changed from 5 to 15
+        displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 15);
     } else if (statusFilter === 'highSold') {
         displayItems.sort((a, b) => b.sold - a.sold); // Sort by sold quantity (descending)
     } else if (statusFilter === 'lowSold') {
@@ -693,8 +1026,8 @@ function refreshUI() {
     } else if (statusFilter === 'lastSold') {
         // Sort by lastSoldDate (newest first), items without lastSoldDate will appear last
         displayItems.sort((a, b) => {
-            const dateA = a.lastSoldDate ? new Date(a.lastSoldDate).getTime() : 0; // Use 0 if no lastSoldDate
-            const dateB = b.lastSoldDate ? new Date(b.lastSoldDate).getTime() : 0; // Use 0 if no lastSoldDate
+            const dateA = a.lastSoldDate ? new Date(a.lastSoldDate).getTime() : 0;
+            const dateB = b.lastSoldDate ? new Date(b.lastSoldDate).getTime() : 0;
             return dateB - dateA;
         });
     }
@@ -708,11 +1041,27 @@ function refreshUI() {
         const inStockCount = item.totalQuantity - item.sold;
 
         // Add 'critical-low-stock' class if item is 5 or less
-        if (inStockCount <= 5) {
+        if (inStockCount <= 0) {
             tr.classList.add('critical-low-stock');
-        } else if (inStockCount <= 15) { // Add 'low-stock' class if item is between 6 and 15
+        } else if (inStockCount <= 5) { // Add 'low-stock' class if item is between 6 and 15
             tr.classList.add('low-stock');
         }
+
+        // Calculate Last Sold Quantity within the last 1 hour
+        const oneHourAgo = new Date(Date.now() - 1 * 60 * 60 * 1000);
+        let last1HourSold = 0;
+        // Ensure saleHistory exists and is an array
+        if (item.saleHistory && Array.isArray(item.saleHistory)) {
+            // Filter saleHistory to only include sales within the last 1 hour
+            item.saleHistory = item.saleHistory.filter(sale => new Date(sale.timestamp) >= oneHourAgo);
+            last1HourSold = item.saleHistory.reduce((sum, sale) => sum + sale.quantity, 0);
+        } else {
+            // Initialize if it doesn't exist (for older data or new items)
+            item.saleHistory = [];
+        }
+
+        // Display Last Sold Quantity
+        const lastSoldQtyDisplay = last1HourSold > 0 ? last1HourSold : 'N/A';
 
         tr.innerHTML = `
             <td>${item.name}</td>
@@ -724,7 +1073,8 @@ function refreshUI() {
                 <button class="sold-inc" aria-label="Increase sold count for ${item.name}" ${inStockCount <= 0 ? 'disabled' : ''}>+</button>
             </td>
             <td>${inStockCount}</td>
-            <td>${new Date(item.dateAdded).toLocaleDateString()}</td>
+            <td>${lastSoldQtyDisplay}</td>
+            <td>${item.lastEdited ? new Date(item.lastEdited).toLocaleString() : 'N/A'}</td>
             <td class="item-actions">
                 <button class="edit" aria-label="Edit all details for ${item.name}">All</button>
                 <button class="edit-qty" aria-label="Edit total quantity for ${item.name}">Qty</button>
@@ -739,6 +1089,28 @@ function refreshUI() {
             if (item.sold > 0) {
                 item.sold--;
                 item.lastEdited = new Date().toISOString(); // Update lastEdited
+
+                // When decrementing, remove the *latest* sale of quantity 1 from saleHistory.
+                // This is a common approach to reflect decrements in a history.
+                if (item.saleHistory && item.saleHistory.length > 0) {
+                    // Sort sales by timestamp in descending order to easily remove the most recent one
+                    item.saleHistory.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+                    let removed = false;
+                    for (let i = 0; i < item.saleHistory.length; i++) {
+                        if (item.saleHistory[i].quantity >= 1) {
+                            item.saleHistory[i].quantity--;
+                            if (item.saleHistory[i].quantity === 0) {
+                                item.saleHistory.splice(i, 1); // Remove entry if quantity becomes 0
+                            }
+                            removed = true;
+                            break;
+                        }
+                    }
+                    // Re-sort ascending after modification if needed for other uses
+                    item.saleHistory.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+                }
+
                 saveItems();
                 refreshUI();
             }
@@ -748,7 +1120,10 @@ function refreshUI() {
             if (inStockCount > 0) {
                 item.sold++;
                 item.lastEdited = new Date().toISOString(); // Update lastEdited
-                item.lastSoldDate = new Date().toISOString(); // Set lastSoldDate
+                const now = new Date().toISOString();
+                // Add to saleHistory
+                if (!item.saleHistory) item.saleHistory = [];
+                item.saleHistory.push({ timestamp: now, quantity: 1 });
                 saveItems();
                 refreshUI();
             }
@@ -801,11 +1176,35 @@ function refreshUI() {
                     return;
                 }
 
-                // If sold quantity increased, update lastSoldDate
+                // If sold quantity increased, record in saleHistory
                 if (newSold > itemToUpdate.sold) {
-                    itemToUpdate.lastSoldDate = new Date().toISOString();
+                    const quantityIncreased = newSold - itemToUpdate.sold;
+                    const now = new Date().toISOString();
+                    if (!itemToUpdate.saleHistory) itemToUpdate.saleHistory = [];
+                    itemToUpdate.saleHistory.push({ timestamp: now, quantity: quantityIncreased });
+                } else if (newSold < itemToUpdate.sold) {
+                    // If sold quantity decreased, we need to try and remove the 'last' sales from saleHistory
+                    const quantityDecreased = itemToUpdate.sold - newSold;
+                    if (itemToUpdate.saleHistory && Array.isArray(itemToUpdate.saleHistory)) {
+                        let remainingToDecrease = quantityDecreased;
+                        // Sort by timestamp descending to remove most recent sales first
+                        itemToUpdate.saleHistory.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+                        const newSaleHistory = [];
+                        for (const sale of itemToUpdate.saleHistory) {
+                            if (remainingToDecrease > 0) {
+                                const reducedFromThisSale = Math.min(sale.quantity, remainingToDecrease);
+                                sale.quantity -= reducedFromThisSale;
+                                remainingToDecrease -= reducedFromThisSale;
+                            }
+                            if (sale.quantity > 0) {
+                                newSaleHistory.push(sale);
+                            }
+                        }
+                        itemToUpdate.saleHistory = newSaleHistory.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // Re-sort ascending
+                    }
                 }
-                
+
                 itemToUpdate.name = newName;
                 itemToUpdate.brand = newBrand;
                 itemToUpdate.totalQuantity = newTotalQuantity;
@@ -851,18 +1250,52 @@ function refreshUI() {
         tr.querySelector('.edit-sold').onclick = () => {
             const userPass = prompt('Enter password to edit sold quantity:');
             if (userPass === password) {
-                const quantityToAdd = parseInt(prompt('Enter quantity to add to sold:', 0), 10);
-                if (isNaN(quantityToAdd) || quantityToAdd < 0) {
-                    showModalMessage('Invalid sold quantity. Please enter a positive number.');
+                const quantityToAdjust = parseInt(prompt('Enter quantity to add to sold (use negative to decrease):', 0), 10);
+                if (isNaN(quantityToAdjust)) {
+                    showModalMessage('Invalid sold quantity. Please enter a number.');
                     return;
                 }
 
-                // Only update lastSoldDate if sold quantity is actually increasing
-                if (quantityToAdd > 0) {
-                    item.lastSoldDate = new Date().toISOString();
+                const newSoldQuantity = (item.sold || 0) + quantityToAdjust;
+
+                if (newSoldQuantity < 0) {
+                    showModalMessage('Sold quantity cannot be negative.');
+                    return;
+                }
+                if (newSoldQuantity > item.totalQuantity) {
+                    showModalMessage('Sold quantity cannot exceed total quantity.');
+                    return;
                 }
 
-                item.sold = (item.sold || 0) + quantityToAdd;
+                // If sold quantity increased, record in saleHistory
+                if (quantityToAdjust > 0) {
+                    const now = new Date().toISOString();
+                    if (!item.saleHistory) item.saleHistory = [];
+                    item.saleHistory.push({ timestamp: now, quantity: quantityToAdjust });
+                } else if (quantityToAdjust < 0) {
+                    // If sold quantity decreased, try to remove from saleHistory
+                    const actualDecrease = -quantityToAdjust; // Make it a positive number
+                    if (item.saleHistory && Array.isArray(item.saleHistory)) {
+                        let remainingToDecrease = actualDecrease;
+                        // Sort by timestamp descending to remove most recent sales first
+                        item.saleHistory.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+                        const newSaleHistory = [];
+                        for (const sale of item.saleHistory) {
+                            if (remainingToDecrease > 0) {
+                                const reducedFromThisSale = Math.min(sale.quantity, remainingToDecrease);
+                                sale.quantity -= reducedFromThisSale;
+                                remainingToDecrease -= reducedFromThisSale;
+                            }
+                            if (sale.quantity > 0) {
+                                newSaleHistory.push(sale);
+                            }
+                        }
+                        item.saleHistory = newSaleHistory.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // Re-sort ascending
+                    }
+                }
+
+                item.sold = newSoldQuantity;
                 item.lastEdited = new Date().toISOString();
                 saveItems();
                 refreshUI();
@@ -898,7 +1331,7 @@ function refreshUI() {
                 sold: 0, // Reset sold count for duplicate
                 totalQuantity: item.totalQuantity, // Keep original quantity
                 lastEdited: new Date().toISOString(), // Set lastEdited for duplicated item
-                lastSoldDate: null // Duplicate should not have a lastSoldDate unless it's sold again
+                saleHistory: [], // Reset sale history for duplicated item
             });
             saveItems();
             refreshUI();
@@ -917,29 +1350,40 @@ function updateDashboard() {
     const totalQuantity = items.reduce((acc, i) => acc + i.totalQuantity, 0);
     const totalSold = items.reduce((acc, i) => acc + i.sold, 0);
     const totalInStock = totalQuantity - totalSold;
-    // Calculate total revenue from sold items (assuming price is per item)
+
+    // Calculate total sold in last 1 hour across all items
+    const oneHourAgo = new Date(Date.now() - 1 * 60 * 60 * 1000); // 1 hour in milliseconds
+    const totalSoldLast1Hour = items.reduce((acc, item) => {
+        if (item.saleHistory && Array.isArray(item.saleHistory)) {
+            const itemSalesLast1Hour = item.saleHistory.filter(sale => new Date(sale.timestamp) >= oneHourAgo);
+            return acc + itemSalesLast1Hour.reduce((sum, sale) => sum + sale.quantity, 0);
+        }
+        return acc;
+    }, 0);
+
 
     totalItemsCount.textContent = totalItems;
     totalQuantityCount.textContent = totalQuantity;
     totalSoldCount.textContent = totalSold;
     totalInStockCount.textContent = totalInStock;
-    // Display as "Total Revenue"
+    totalSoldLast24HoursCount.textContent = totalSoldLast1Hour; // This element now shows 1-hour sales
 }
 
 // Charts update
 function updateCharts() {
-    // Monthly Sold Bar Chart (existing code)
+    // Monthly Sold Bar Chart
     const monthlyData = {};
 
     items.forEach(item => {
-        // Use lastSoldDate for monthly chart if available, otherwise fall back to dateAdded
-        const dateToConsider = item.lastSoldDate || item.dateAdded; 
-        if (item.sold > 0 && dateToConsider) {
-            const d = new Date(dateToConsider);
-            if (isNaN(d)) return;
-            const key = `${d.getFullYear()}-${('0' + (d.getMonth() + 1)).slice(-2)}`;
-            if (!monthlyData[key]) monthlyData[key] = 0;
-            monthlyData[key] += item.sold;
+        // Use individual sales from saleHistory for more accurate monthly data
+        if (item.saleHistory && Array.isArray(item.saleHistory)) {
+            item.saleHistory.forEach(sale => {
+                const d = new Date(sale.timestamp);
+                if (isNaN(d)) return;
+                const key = `${d.getFullYear()}-${('0' + (d.getMonth() + 1)).slice(-2)}`;
+                if (!monthlyData[key]) monthlyData[key] = 0;
+                monthlyData[key] += sale.quantity;
+            });
         }
     });
 
@@ -980,7 +1424,7 @@ function updateCharts() {
         }
     });
 
-    // Pie Chart: Top 20 Most Sold Items in the Last 7 Days (updated label and logic)
+    // Pie Chart: Top 20 Most Sold Items in the Last 7 Days
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     sevenDaysAgo.setHours(0, 0, 0, 0); // Set to start of the day 7 days ago
@@ -988,11 +1432,13 @@ function updateCharts() {
     const weeklySoldItemsData = {};
 
     items.forEach(item => {
-        if (item.sold > 0 && item.lastSoldDate) { // Ensure there's a lastSoldDate
-            const lastSoldDate = new Date(item.lastSoldDate);
-            if (lastSoldDate >= sevenDaysAgo) { // Check if item was *last sold* within the last 7 days
-                weeklySoldItemsData[item.name] = (weeklySoldItemsData[item.name] || 0) + item.sold;
-            }
+        if (item.saleHistory && Array.isArray(item.saleHistory)) {
+            item.saleHistory.forEach(sale => {
+                const saleDate = new Date(sale.timestamp);
+                if (saleDate >= sevenDaysAgo) { // Check if sale occurred within the last 7 days
+                    weeklySoldItemsData[item.name] = (weeklySoldItemsData[item.name] || 0) + sale.quantity;
+                }
+            });
         }
     });
 
@@ -1062,7 +1508,7 @@ addItemForm.onsubmit = (e) => {
         // price: price, // Uncomment if you add price input
         dateAdded: new Date().toISOString(),
         lastEdited: new Date().toISOString(), // Initialize lastEdited for new items
-        lastSoldDate: sold > 0 ? new Date().toISOString() : null // Set lastSoldDate if any quantity is sold at creation
+        saleHistory: sold > 0 ? [{ timestamp: new Date().toISOString(), quantity: sold }] : [], // Initialize saleHistory
     };
 
     items.push(newItem);
@@ -1133,7 +1579,7 @@ importJsonFile.onchange = (event) => {
             try {
                 const importedData = JSON.parse(e.target.result);
                 if (Array.isArray(importedData)) {
-                    // Basic validation for imported data structure
+                    // Basic validation for imported data structure (checking for required fields)
                     const isValid = importedData.every(item =>
                         typeof item.name === 'string' &&
                         typeof item.brand === 'string' &&
@@ -1142,53 +1588,138 @@ importJsonFile.onchange = (event) => {
                         typeof item.dateAdded === 'string'
                     );
 
-                    if (isValid) {
-                        const customConfirm = document.createElement('div');
-                        customConfirm.className = 'modal-message';
-                        customConfirm.innerHTML = `
-                            <p>Importing will overwrite your current inventory. Are you sure?</p>
-                            <button id="confirmYes">Yes</button>
-                            <button id="confirmNo">No</button>
-                        `;
-                        document.body.appendChild(customConfirm);
+               if (isValid) {
+    const userConfirmed = window.confirm("Importing will overwrite your current inventory. Are you sure?");
+    
+    if (userConfirmed) {
+        // Ensure imported items have necessary fields, including saleHistory
+        items = importedData.map(item => ({
+            ...item,
+            lastEdited: item.lastEdited || item.dateAdded,
+            saleHistory: Array.isArray(item.saleHistory)
+                ? item.saleHistory
+                : (item.sold > 0
+                    ? [{ timestamp: item.lastSoldDate || item.dateAdded, quantity: item.sold }]
+                    : []),
+            lastSoldDate: undefined,
+            lastSoldQuantity: undefined
+        }));
+        saveItems();
+        refreshUI();
+        showModalMessage('Inventory imported successfully!');
+    } else {
+        showModalMessage('Import cancelled.');
+    }
+} else {
+    showModalMessage('Invalid JSON structure. Please ensure it\'s an array of items with correct properties.');
+}
 
-                        document.getElementById('confirmYes').onclick = () => {
-                            // Ensure imported items have lastEdited and lastSoldDate fields
-                            items = importedData.map(item => ({
-                                ...item,
-                                lastEdited: item.lastEdited || item.dateAdded, // Use existing lastEdited or dateAdded as fallback
-                                lastSoldDate: item.lastSoldDate || null // Ensure lastSoldDate is present, default to null
-                            }));
-                            saveItems();
-                            refreshUI();
-                            customConfirm.remove();
-                            showModalMessage('Inventory data imported successfully!');
-                        };
-                        document.getElementById('confirmNo').onclick = () => {
-                            customConfirm.remove();
-                            showModalMessage('Import cancelled.');
-                        };
-                    } else {
-                        showModalMessage('Invalid JSON file format. Please ensure it contains valid inventory data.');
-                    }
                 } else {
-                    showModalMessage('Invalid JSON file. Expected an array of items.');
+                    showModalMessage('Invalid JSON file. Expected an array of inventory items.');
                 }
-            } catch (error) {
-                console.error('Error parsing JSON file:', error);
-                showModalMessage('Error reading or parsing the JSON file.');
+            } catch (e) {
+                showModalMessage('Error parsing JSON file: ' + e.message);
             }
-            // Clear the file input to allow re-importing the same file
-            event.target.value = ''; 
         };
         reader.readAsText(file);
     }
 };
 
+// --- SALES LOG FUNCTIONALITY ---
+
+// Function to populate and display the sales log
+function displaySalesLog(startDate = null, endDate = null) {
+    salesLogTableBody.innerHTML = ''; // Clear existing log
+
+    let allSales = [];
+
+    // Collect all sales from all items, along with item name and brand
+    items.forEach(item => {
+        if (item.saleHistory && Array.isArray(item.saleHistory)) {
+            item.saleHistory.forEach(sale => {
+                const saleDate = new Date(sale.timestamp);
+                if (
+                    (!startDate || saleDate >= startDate) &&
+                    (!endDate || saleDate <= endDate)
+                ) {
+                    allSales.push({
+                        itemName: item.name,
+                        itemBrand: item.brand,
+                        quantity: sale.quantity,
+                        timestamp: sale.timestamp
+                    });
+                }
+            });
+        }
+    });
+
+    // Sort sales by timestamp, newest first
+    allSales.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    if (allSales.length === 0) {
+        const noDataRow = document.createElement('tr');
+        noDataRow.innerHTML = `<td colspan="4" style="text-align: center;">No sales recorded for this period.</td>`;
+        salesLogTableBody.appendChild(noDataRow);
+        return;
+    }
+
+    allSales.forEach(sale => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${sale.itemName}</td>
+            <td>${sale.itemBrand}</td>
+            <td>${sale.quantity}</td>
+            <td>${new Date(sale.timestamp).toLocaleString()}</td>
+        `;
+        salesLogTableBody.appendChild(tr);
+    });
+}
+
+// Event listener for "View Sales Log" button
+viewSalesLogBtn.onclick = () => {
+    // Reset filters and display all sales when opening
+    salesLogStartDateInput.value = '';
+    salesLogEndDateInput.value = '';
+    displaySalesLog(); // Display all sales initially
+    salesLogModal.style.display = 'flex'; // Show the sales log modal
+};
+
+// Event listener for closing the sales log modal
+closeSalesLogButton.onclick = () => {
+    salesLogModal.style.display = 'none'; // Hide the sales log modal
+};
+
+// Event listener for applying sales log filters
+applySalesLogFilterBtn.onclick = () => {
+    const startDate = salesLogStartDateInput.value ? new Date(salesLogStartDateInput.value) : null;
+    const endDate = salesLogEndDateInput.value ? new Date(salesLogEndDateInput.value) : null;
+
+    // Normalize dates for accurate comparison
+    if (startDate) startDate.setHours(0, 0, 0, 0);
+    if (endDate) endDate.setHours(23, 59, 59, 999);
+
+    if (startDate && endDate && startDate > endDate) {
+        showModalMessage('Start date cannot be after end date.');
+        return;
+    }
+
+    displaySalesLog(startDate, endDate);
+};
+
+// Event listener for clearing sales log filters
+clearSalesLogFilterBtn.onclick = () => {
+    salesLogStartDateInput.value = '';
+    salesLogEndDateInput.value = '';
+    displaySalesLog(); // Display all sales after clearing filters
+};
+
+
 // Initial load
 document.addEventListener('DOMContentLoaded', () => {
     loadDarkModeSetting();
     refreshUI();
+    // Set up hourly refresh for the dashboard stats
+    setInterval(updateDashboard, 60 * 60 * 1000); // Refresh every 1 hour (60 minutes * 60 seconds * 1000 milliseconds)
 });
 </script>
 </body>
