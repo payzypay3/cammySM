@@ -1,0 +1,1195 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Inventory Dashboard with Filters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=ABeeZee:ital@0;1&family=Ancizar+Sans:ital,wght@0,100..1000;1,100..1000&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-light: #f5f7fa;
+    --bg-dark: #121212;
+    --text-light: #333;
+    --text-dark: #eee;
+    --primary: #007bff;
+    --danger: #dc3545;
+    --success: #28a745;
+    --warning: #ffc107;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  body {
+    margin: 0; padding: 0;
+    font-family: var(--font-family);
+    background: var(--bg-light);
+    color: var(--text-light);
+    transition: background-color 0.3s, color 0.3s;
+  }
+  body.dark {
+    background: var(--bg-dark);
+    color: var(--text-dark);
+  }
+  h1 {
+    text-align: center;
+    margin: 1rem 0;
+  }
+  .container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 1rem;
+  }
+  /* Filter section */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: center;
+  }
+  legend{
+    font-family: "ABeeZee", sans-serif;
+  }
+
+
+footer{
+    background-color: rgb(6, 93, 255);
+    height: 50px;
+    text-align: center;
+    color: white;
+   
+    
+}
+  label{
+    font-family: "ABeeZee", sans-serif;
+  }
+  .filters label {
+    font-weight: 600;
+  }
+  .filters input[type="text"], .filters select {
+    padding: 0.4rem 0.6rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    transition: border-color 0.2s;
+  }
+  .filters input[type="text"]:focus, .filters select:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+  /* Table styles */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+  }
+  thead {
+    background: var(--primary);
+    color: white;
+  }
+  body.dark thead {
+    background: #0056b3;
+  }
+  th, td {
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  body.dark th, body.dark td {
+    border-color: #444;
+  }
+
+  body.dark tr:hover {
+    background: #333;
+  }
+
+
+tr.low-stock {
+  background-color: var(--danger) !important; /* This will be overridden by the specific yellow below */
+  color: white;
+}
+body.dark tr.low-stock {
+  background-color: #fbff00 !important; /* Changed to yellow for dark mode */
+  color: #333 !important; /* Ensure text is visible on yellow */
+}
+tr.low-stock { /* Added for light mode to ensure yellow highlight */
+    background-color: yellow !important;
+    color: black !important;
+}
+
+/* Styles for general table rows */
+#itemTableBody tr {
+    /* Your default row styles */
+}
+
+/* Styles for low stock (yellow) */
+#itemTableBody tr.low-stock {
+    background-color: #ffff49; /* Light yellow */
+}
+
+/* Styles for critical low stock (red) - this rule should come AFTER .low-stock */
+#itemTableBody tr.critical-low-stock {
+    background-color: #ff5b5b; /* Light red */
+}
+
+    input[type="text"]{
+    border-radius: 5px;
+    height: 30px;
+    margin-bottom: 5px;
+   }
+
+
+  /* Buttons */
+  button {
+    cursor: pointer;
+    border: none;
+    padding: 4px 8px;
+    margin: 0 2px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+  }
+  button.edit {
+    background: var(--primary);
+    color: white;
+  }
+  button.edit-qty { /* New style for edit quantity button */
+    background: #009688; /* A teal color */
+    color: white;
+  }
+    button.edit-sold { /* New style for edit quantity button */
+    background: #ff6600; /* A teal color */
+    color: white;
+  }
+  button.delete {
+    background: var(--danger);
+    color: white;
+  }
+  button.duplicate {
+    background: var(--warning);
+    color: #333;
+  }
+  button.sold-inc, button.sold-dec {
+    background: var(--success);
+    color: white;
+    font-weight: 700;
+  }
+  button.sold-dec {
+    background: #28a745cc;
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  
+
+  input[type="number"]{
+    border-radius: 5px;
+    height: 30px;
+  }
+  /* Dashboard */
+  .dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    justify-content: center;
+  }
+  .dashboard .card {
+    background: white;
+    flex: 1 1 150px;
+    min-width: 140px;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #ccc;
+    text-align: center;
+  }
+  body.dark .dashboard .card {
+    background: #222;
+    box-shadow: 0 0 10px #000;
+  }
+  .dashboard .card h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.3rem;
+  }
+  .dashboard .card p {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.4rem;
+  }
+  /* Charts container */
+  .charts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+  .chart-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #ccc;
+    width: 320px;
+  }
+  body.dark .chart-card {
+    background: #222;
+    box-shadow: 0 0 10px #000;
+  }
+  /* Dark mode toggle button */
+  #modeToggleBtn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: var(--primary);
+    border-radius: 50%;
+    width: 40px; height: 40px;
+    font-size: 20px;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    z-index: 1000;
+  }
+  #modeToggleBtn:hover {
+    background: #0056b3;
+  }
+  /* New buttons styling */
+  .action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .action-buttons button {
+    padding: 8px 15px;
+    font-size: 1rem;
+    border-radius: 5px;
+  }
+
+  #downloadZipBtn {
+    background-color: #6c757d; /* Gray */
+    color: white;
+  }
+
+  #downloadZipBtn:hover {
+    background-color: #5a6268;
+  }
+
+  #importJsonBtn {
+    background-color: #17a2b8; /* Cyan */
+    color: white;
+  }
+
+  #importJsonBtn:hover {
+    background-color: #138496;
+  }
+
+  #printPdfBtn {
+    background-color: #dc3545; /* Red for print */
+    color: white;
+  }
+
+  #printPdfBtn:hover {
+    background-color: #c82333;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .filters {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .dashboard {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .charts {
+      flex-direction: column;
+      align-items: center;
+    }
+    .chart-card {
+      width: 100%;
+      max-width: 400px;
+    }
+    .action-buttons {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    /* Make buttons stack vertically for smaller screens */
+    .item-actions button {
+      display: block;
+      width: 100%;
+      margin-bottom: 5px; /* Add some space between stacked buttons */
+      margin-left: 0;
+      margin-right: 0;
+    }
+    .item-actions {
+      display: flex; /* Override display: flex; to allow stacking */
+      flex-direction: column;
+      gap: 5px; /* Ensure consistent spacing */
+      align-items: stretch;
+    }
+  }
+
+  .container h1{
+    font-family: "ABeeZee", sans-serif;
+   font-weight: bold;
+   font-size: 2.5rem;
+   
+  }
+
+  /* PDF specific styles */
+  @media print {
+    /* Ensure page breaks before these sections */
+    .dashboard, .charts {
+      page-break-before: always;
+    }
+    /* Adjust margins for PDF */
+    body {
+      margin: 0.5in !important; /* Adjust as needed */
+    }
+  }
+
+  button[type="submit"]{
+    background-color: rgb(0, 183, 255);
+    color: white;
+    border-radius: 5px;
+    height: 30px;
+
+  }
+
+  /* Styles for the Edit Item Modal */
+  #editItemModal {
+      display: none; /* Hidden by default */
+      position: fixed; /* Stay in place */
+      z-index: 1001; /* Sit on top */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      overflow: auto; /* Enable scroll if needed */
+      background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  }
+
+  #editItemModal > div {
+      background-color: var(--bg-light); /* Use theme variable for background */
+      margin: 10% auto; /* 10% from the top and centered */
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%; /* Could be more or less, depending on screen size */
+      max-width: 500px; /* Max width for larger screens */
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+
+  body.dark #editItemModal > div {
+      background-color: var(--bg-dark); /* Dark mode background */
+      color: var(--text-white);
+   
+  }
+
+  
+
+  #editItemModal input[type="text"],
+  #editItemModal input[type="number"] {
+      width: calc(100% - 12px); /* Account for padding */
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: var(--bg-light); /* Use theme variable for input background */
+      color: var(--text-light); /* Use theme variable for input text color */
+  }
+
+  body.dark #editItemModal input[type="text"],
+  body.dark #editItemModal input[type="number"] {
+      background-color: #333; /* Darker input background for dark mode */
+      border-color: #555;
+      color: var(--text-dark);
+  }
+  input[type="date"]{
+    margin-left: 20px;
+    height: 30px;
+    border-radius: 5px;
+   border: 1px solid #ccc;
+
+  
+  }
+
+  .close-button {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+  }
+
+  .close-button:hover,
+  .close-button:focus {
+      color: #000;
+      text-decoration: none;
+      cursor: pointer;
+  }
+
+  body.dark .close-button {
+      color: #eee;
+  }
+
+  body.dark .close-button:hover,
+  body.dark .close-button:focus {
+      color: white;
+  }
+</style>
+</head>
+<body>
+    <button id="modeToggleBtn" aria-label="Toggle Dark Mode">🌙</button>
+    <header>
+        <h1>Inventory Management Dashboard</h1>
+    </header>
+    <div class="container">
+        <div class="filters" aria-label="Filter inventory items">
+            <label for="filterName">Name:</label>
+            <input type="text" id="filterName" placeholder="Search by name" />
+
+            <label for="filterBrand">Brand:</label>
+            <input type="text" id="filterBrand" placeholder="Search by brand" />
+
+<label for="filterStatus">Status:</label>
+<select id="filterStatus" aria-label="Filter by stock status">
+    <option value="all">Show All</option>
+    <option value="inStock">In Stock</option>
+    <option value="soldOut">Sold Out</option>
+    <option value="lowStock">Low Stock (<= 15)</option>
+    <option value="highSold">High Sold</option>
+    <option value="lowSold">Low Sold</option>
+    <option value="lastEdited">Last Edited (Newest First)</option>
+    <option value="lastSold">Last Sold (Newest First)</option> </select>
+
+            <div class="date">
+            <label for="filterStartDate">Start Date:</label>
+            <input type="date" id="filterStartDate" />
+
+            <label for="filterEndDate">End Date:</label>
+            <input type="date" id="filterEndDate" />
+        </div>
+    </div>
+
+        <div class="action-buttons">
+            <button id="downloadZipBtn">Download Inventory (ZIP)</button>
+            <input type="file" id="importJsonFile" accept=".json" style="display: none;">
+            <button id="importJsonBtn">Import Inventory (JSON)</button>
+            <button id="printPdfBtn">Print PDF</button>
+        </div>
+
+        <form id="addItemForm" aria-label="Add new inventory item">
+    <fieldset>
+        <legend>Add New Item</legend>
+        <label>
+            Item Name: <input type="text" id="itemName" required />
+        </label>
+        <label>
+            Brand: <input type="text" id="brand" required />
+        </label>
+        <label>
+            Total Quantity: <input type="number" id="totalQuantity" min="1" required />
+        </label>
+        <label>
+            Sold: <input type="number" id="sold" min="0" value="0" required />
+        </label>
+        <button type="submit">Add Item</button>
+    </fieldset>
+</form>
+
+        <table aria-label="Inventory items table" id="itemTable" role="grid">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Brand</th>
+                    <th>Qty</th>
+                    <th>Sold</th>
+                    <th>In Stock</th>
+                    <th>Date Added</th>
+                    <th>Actions Edit</th>
+                </tr>
+            </thead>
+            <tbody id="itemTableBody"></tbody>
+        </table>
+
+        <section class="dashboard" aria-label="Inventory summary">
+            <div class="card"><h2>Total Items</h2><p id="totalItemsCount">0</p></div>
+            <div class="card"><h2>Total Quantity</h2><p id="totalQuantityCount">0</p></div>
+            <div class="card"><h2>Total Sold</h2><p id="totalSoldCount">0</p></div>
+            <div class="card"><h2>In Stock</h2><p id="totalInStockCount">0</p></div>
+        </section>
+
+        <section class="charts" aria-label="Sales charts">
+            <div class="chart-card">
+                <h3>Monthly Sold Items</h3>
+                <canvas id="monthlySoldBarChart" aria-label="Bar chart showing items sold per month" role="img"></canvas>
+            </div>
+            <div class="chart-card">
+                <h2 class="text-2xl font-semibold mb-4">Top 20 Recently Sold Items</h2>
+                <canvas id="soldItemsPieChart"></canvas>
+            </div>
+        </section>
+    </div>
+
+    <div id="editItemModal" style="display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+        <div style="background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+            <span class="close-button" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+            <h2 style="text-align: center; margin-top: 0; font-family: 'ABeeZee', sans-serif;">Edit Item Details</h2>
+            <form id="editItemForm">
+                <input type="hidden" id="editItemId">
+                <p>
+                    <label for="editItemName" style="display: block; margin-bottom: 5px;">Item Name:</label>
+                    <input type="text" id="editItemName" required style="width: calc(100% - 12px); padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                </p>
+                <p>
+                    <label for="editBrand" style="display: block; margin-bottom: 5px;">Brand:</label>
+                    <input type="text" id="editBrand" required style="width: calc(100% - 12px); padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                </p>
+                <p>
+                    <label for="editTotalQuantity" style="display: block; margin-bottom: 5px;">Total Quantity:</label>
+                    <input type="number" id="editTotalQuantity" min="1" required style="width: calc(100% - 12px); padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                </p>
+                <p>
+                    <label for="editSold" style="display: block; margin-bottom: 5px;">Sold:</label>
+                    <input type="number" id="editSold" min="0" required style="width: calc(100% - 12px); padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                </p>
+                <div style="text-align: right;">
+                    <button type="submit" style="background-color: var(--primary); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; margin-right: 10px;">Save Changes</button>
+                    <button type="button" id="cancelEdit" style="background-color: var(--secondary); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; Developed by Shane Computers.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+// Helper function for displaying modal messages
+function showModalMessage(message) {
+    const messageBox = document.createElement('div');
+    messageBox.className = 'modal-message';
+    messageBox.innerHTML = `
+        <p>${message}</p>
+        <button class="modal-message-close">Close</button>
+    `;
+    document.body.appendChild(messageBox);
+    messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
+}
+
+const addItemForm = document.getElementById('addItemForm');
+const itemTableBody = document.getElementById('itemTableBody');
+const totalItemsCount = document.getElementById('totalItemsCount');
+const totalQuantityCount = document.getElementById('totalQuantityCount');
+const totalSoldCount = document.getElementById('totalSoldCount');
+const totalInStockCount = document.getElementById('totalInStockCount'); // Corrected typo here (removed extra '= document')
+const totalValueCount = document.getElementById('totalValueCount'); // This will now show Total Revenue
+const monthlySoldBarChartCtx = document.getElementById('monthlySoldBarChart').getContext('2d');
+const soldItemsPieChartCtx = document.getElementById('soldItemsPieChart').getContext('2d');
+const modeToggleBtn = document.getElementById('modeToggleBtn');
+
+// Filter inputs
+const filterNameInput = document.getElementById('filterName');
+const filterBrandInput = document.getElementById('filterBrand');
+const filterStatusSelect = document.getElementById('filterStatus');
+// Date range filter inputs
+const filterStartDateInput = document.getElementById('filterStartDate');
+const filterEndDateInput = document.getElementById('filterEndDate');
+
+// New button references
+const downloadZipBtn = document.getElementById('downloadZipBtn');
+const importJsonFile = document.getElementById('importJsonFile');
+const importJsonBtn = document.getElementById('importJsonBtn');
+const printPdfBtn = document.getElementById('printPdfBtn');
+
+// Edit Item Modal elements
+const editItemModal = document.getElementById('editItemModal');
+const editItemForm = document.getElementById('editItemForm');
+const closeButton = editItemModal.querySelector('.close-button');
+const cancelEditButton = document.getElementById('cancelEdit');
+
+const editItemId = document.getElementById('editItemId');
+const editItemName = document.getElementById('editItemName');
+const editBrand = document.getElementById('editBrand');
+const editTotalQuantity = document.getElementById('editTotalQuantity');
+const editSold = document.getElementById('editSold');
+// Removed references to editPrice and editDateAdded as they are no longer in the modal
+
+// Data storage
+let items = JSON.parse(localStorage.getItem('inventoryItems')) || [];
+
+// New global variable to store currently filtered items for PDF generation
+let filteredItemsForDisplay = [];
+
+// Password for editing/deleting
+const password = '';
+
+// Chart instances
+let monthlySoldBarChart = null;
+let soldItemsPieChart = null;
+
+// Save items to localStorage
+function saveItems() {
+    localStorage.setItem('inventoryItems', JSON.stringify(items));
+}
+
+// Filter & refresh UI function
+function refreshUI() {
+    // Clear table
+    itemTableBody.innerHTML = '';
+
+    // Get filters
+    const nameFilter = filterNameInput.value.trim().toLowerCase();
+    const brandFilter = filterBrandInput.value.trim().toLowerCase();
+    const statusFilter = filterStatusSelect.value;
+
+    // Get date filters
+    const startDate = filterStartDateInput.value ? new Date(filterStartDateInput.value) : null;
+    const endDate = filterEndDateInput.value ? new Date(filterEndDateInput.value) : null;
+
+    // Normalize dates to start/end of day for accurate comparison
+    if (startDate) startDate.setHours(0, 0, 0, 0);
+    if (endDate) endDate.setHours(23, 59, 59, 999);
+
+    // First, filter by name, brand, and date range
+    let displayItems = items.filter(item => {
+        const matchesName = item.name.toLowerCase().includes(nameFilter);
+        const matchesBrand = item.brand.toLowerCase().includes(brandFilter);
+
+        // Date range filtering logic
+        const itemDate = new Date(item.dateAdded);
+        if (startDate && itemDate < startDate) return false;
+        if (endDate && itemDate > endDate) return false;
+
+        return matchesName && matchesBrand;
+    });
+
+    // Then, apply status filtering (inStock/soldOut/lowStock) or sorting (highSold/lowSold/lastEdited/lastSold)
+    if (statusFilter === 'inStock') {
+        displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) > 0);
+    } else if (statusFilter === 'soldOut') {
+        displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 0);
+    } else if (statusFilter === 'lowStock') { // Low Stock filter logic
+        displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 15); // Changed from 5 to 15
+    } else if (statusFilter === 'highSold') {
+        displayItems.sort((a, b) => b.sold - a.sold); // Sort by sold quantity (descending)
+    } else if (statusFilter === 'lowSold') {
+        displayItems.sort((a, b) => a.sold - b.sold); // Sort by sold quantity (ascending)
+    } else if (statusFilter === 'lastEdited') {
+        // Sort by lastEdited date (newest first)
+        displayItems.sort((a, b) => new Date(b.lastEdited || b.dateAdded).getTime() - new Date(a.lastEdited || a.dateAdded).getTime());
+    } else if (statusFilter === 'lastSold') {
+        // Sort by lastSoldDate (newest first), items without lastSoldDate will appear last
+        displayItems.sort((a, b) => {
+            const dateA = a.lastSoldDate ? new Date(a.lastSoldDate).getTime() : 0; // Use 0 if no lastSoldDate
+            const dateB = b.lastSoldDate ? new Date(b.lastSoldDate).getTime() : 0; // Use 0 if no lastSoldDate
+            return dateB - dateA;
+        });
+    }
+
+    // Store the filtered items in the global variable for PDF generation
+    filteredItemsForDisplay = displayItems;
+
+    displayItems.forEach(item => {
+        const tr = document.createElement('tr');
+        // In stock count
+        const inStockCount = item.totalQuantity - item.sold;
+
+        // Add 'critical-low-stock' class if item is 5 or less
+        if (inStockCount <= 5) {
+            tr.classList.add('critical-low-stock');
+        } else if (inStockCount <= 15) { // Add 'low-stock' class if item is between 6 and 15
+            tr.classList.add('low-stock');
+        }
+
+        tr.innerHTML = `
+            <td>${item.name}</td>
+            <td>${item.brand}</td>
+            <td>${item.totalQuantity}</td>
+            <td>
+                <button class="sold-dec" aria-label="Decrease sold count for ${item.name}" ${item.sold <= 0 ? 'disabled' : ''}>-</button>
+                ${item.sold}
+                <button class="sold-inc" aria-label="Increase sold count for ${item.name}" ${inStockCount <= 0 ? 'disabled' : ''}>+</button>
+            </td>
+            <td>${inStockCount}</td>
+            <td>${new Date(item.dateAdded).toLocaleDateString()}</td>
+            <td class="item-actions">
+                <button class="edit" aria-label="Edit all details for ${item.name}">All</button>
+                <button class="edit-qty" aria-label="Edit total quantity for ${item.name}">Qty</button>
+                <button class="edit-sold" aria-label="Edit total quantity for ${item.name}">Sold</button>
+                <button class="delete" aria-label="Delete ${item.name}">🗑️</button>
+                <button class="duplicate" aria-label="Duplicate ${item.name}">🗐</button>
+            </td>
+        `;
+
+        // Sold decrement
+        tr.querySelector('.sold-dec').onclick = () => {
+            if (item.sold > 0) {
+                item.sold--;
+                item.lastEdited = new Date().toISOString(); // Update lastEdited
+                saveItems();
+                refreshUI();
+            }
+        };
+        // Sold increment
+        tr.querySelector('.sold-inc').onclick = () => {
+            if (inStockCount > 0) {
+                item.sold++;
+                item.lastEdited = new Date().toISOString(); // Update lastEdited
+                item.lastSoldDate = new Date().toISOString(); // Set lastSoldDate
+                saveItems();
+                refreshUI();
+            }
+        };
+
+        // Edit All button with password prompt (opens modal)
+        tr.querySelector('.edit').onclick = () => {
+            const userPass = prompt('Enter password to edit this item:');
+            if (userPass === password) {
+                const itemIndex = items.findIndex(i => i === item);
+                if (itemIndex > -1) {
+                    editItemId.value = itemIndex; // Store the index
+                    editItemName.value = item.name;
+                    editBrand.value = item.brand;
+                    editTotalQuantity.value = item.totalQuantity;
+                    editSold.value = item.sold;
+
+                    editItemModal.style.display = 'flex'; // Show the modal (use flex to center)
+                }
+            } else {
+                showModalMessage('Wrong password!');
+            }
+        };
+
+        // Handle edit form submission (inside the modal)
+        editItemForm.onsubmit = (e) => {
+            e.preventDefault();
+            const itemId = parseInt(editItemId.value, 10);
+            if (itemId > -1) {
+                const itemToUpdate = items[itemId];
+                const newName = editItemName.value.trim();
+                const newBrand = editBrand.value.trim();
+                const newTotalQuantity = parseInt(editTotalQuantity.value, 10);
+                const newSold = parseInt(editSold.value, 10);
+
+                // Basic validation
+                if (!newName || !newBrand || isNaN(newTotalQuantity) || isNaN(newSold)) {
+                    showModalMessage('Please fill all fields correctly.');
+                    return;
+                }
+
+                if (newSold > newTotalQuantity) {
+                    showModalMessage('Sold quantity cannot be greater than total quantity.');
+                    return;
+                }
+
+                // Check for duplicate name if the name is changed
+                if (newName.toLowerCase() !== itemToUpdate.name.toLowerCase() && items.some((i, idx) => i.name.toLowerCase() === newName.toLowerCase() && idx !== itemId)) {
+                    showModalMessage('An item with this name already exists. Please choose a different name.');
+                    return;
+                }
+
+                // If sold quantity increased, update lastSoldDate
+                if (newSold > itemToUpdate.sold) {
+                    itemToUpdate.lastSoldDate = new Date().toISOString();
+                }
+                
+                itemToUpdate.name = newName;
+                itemToUpdate.brand = newBrand;
+                itemToUpdate.totalQuantity = newTotalQuantity;
+                itemToUpdate.sold = newSold;
+                itemToUpdate.lastEdited = new Date().toISOString(); // Update lastEdited on full edit
+
+                saveItems();
+                refreshUI();
+                editItemModal.style.display = 'none'; // Hide modal
+            }
+        };
+
+        // Close modal button
+        closeButton.onclick = () => {
+            editItemModal.style.display = 'none';
+        };
+
+        // Cancel edit button
+        cancelEditButton.onclick = () => {
+            editItemModal.style.display = 'none';
+        };
+
+        // Edit Total Quantity button with password prompt
+        tr.querySelector('.edit-qty').onclick = () => {
+            const userPass = prompt('Enter password to edit quantity:');
+            if (userPass === password) {
+                const quantityToAdd = parseInt(prompt('Enter quantity to add:', 0), 10); // Prompt for quantity to ADD
+                if (isNaN(quantityToAdd) || quantityToAdd < 0) {
+                    showModalMessage('Invalid quantity. Please enter a positive number.');
+                    return;
+                }
+
+                item.totalQuantity += quantityToAdd;
+                item.lastEdited = new Date().toISOString(); // Update lastEdited when quantity changes
+                saveItems();
+                refreshUI();
+            } else {
+                showModalMessage('Wrong password!');
+            }
+        };
+
+        // Sold button with password prompt
+        tr.querySelector('.edit-sold').onclick = () => {
+            const userPass = prompt('Enter password to edit sold quantity:');
+            if (userPass === password) {
+                const quantityToAdd = parseInt(prompt('Enter quantity to add to sold:', 0), 10);
+                if (isNaN(quantityToAdd) || quantityToAdd < 0) {
+                    showModalMessage('Invalid sold quantity. Please enter a positive number.');
+                    return;
+                }
+
+                // Only update lastSoldDate if sold quantity is actually increasing
+                if (quantityToAdd > 0) {
+                    item.lastSoldDate = new Date().toISOString();
+                }
+
+                item.sold = (item.sold || 0) + quantityToAdd;
+                item.lastEdited = new Date().toISOString();
+                saveItems();
+                refreshUI();
+            } else {
+                showModalMessage('Wrong password!');
+            }
+        };
+
+        // Delete button with password prompt
+        tr.querySelector('.delete').onclick = () => {
+            const userPass = prompt('Enter password to delete this item:');
+            if (userPass === password) {
+                items = items.filter(i => i !== item);
+                saveItems();
+                refreshUI();
+            } else {
+                showModalMessage('Wrong password!');
+            }
+        };
+
+        // Duplicate item button
+        tr.querySelector('.duplicate').onclick = () => {
+            let newName = item.name;
+            let counter = 0;
+            while (items.find(i => i.name.toLowerCase() === newName.toLowerCase())) {
+                counter++;
+                newName = item.name + ` - Copy (${counter})`;
+            }
+            items.push({
+                ...item,
+                name: newName,
+                dateAdded: new Date().toISOString(), // Ensure new date for duplicated item
+                sold: 0, // Reset sold count for duplicate
+                totalQuantity: item.totalQuantity, // Keep original quantity
+                lastEdited: new Date().toISOString(), // Set lastEdited for duplicated item
+                lastSoldDate: null // Duplicate should not have a lastSoldDate unless it's sold again
+            });
+            saveItems();
+            refreshUI();
+        };
+
+        itemTableBody.appendChild(tr);
+    });
+
+    updateDashboard();
+    updateCharts();
+}
+
+// Dashboard stats
+function updateDashboard() {
+    const totalItems = items.length;
+    const totalQuantity = items.reduce((acc, i) => acc + i.totalQuantity, 0);
+    const totalSold = items.reduce((acc, i) => acc + i.sold, 0);
+    const totalInStock = totalQuantity - totalSold;
+    // Calculate total revenue from sold items (assuming price is per item)
+
+    totalItemsCount.textContent = totalItems;
+    totalQuantityCount.textContent = totalQuantity;
+    totalSoldCount.textContent = totalSold;
+    totalInStockCount.textContent = totalInStock;
+    // Display as "Total Revenue"
+}
+
+// Charts update
+function updateCharts() {
+    // Monthly Sold Bar Chart (existing code)
+    const monthlyData = {};
+
+    items.forEach(item => {
+        // Use lastSoldDate for monthly chart if available, otherwise fall back to dateAdded
+        const dateToConsider = item.lastSoldDate || item.dateAdded; 
+        if (item.sold > 0 && dateToConsider) {
+            const d = new Date(dateToConsider);
+            if (isNaN(d)) return;
+            const key = `${d.getFullYear()}-${('0' + (d.getMonth() + 1)).slice(-2)}`;
+            if (!monthlyData[key]) monthlyData[key] = 0;
+            monthlyData[key] += item.sold;
+        }
+    });
+
+    const months = Object.keys(monthlyData).sort();
+
+    const monthLabels = months.map(m => {
+        const [year, month] = m.split('-');
+        const date = new Date(year, month - 1);
+        return date.toLocaleString('default', { month: 'short', year: 'numeric' });
+    });
+
+    const soldCounts = months.map(m => monthlyData[m]);
+
+    if (monthlySoldBarChart) monthlySoldBarChart.destroy();
+
+    monthlySoldBarChart = new Chart(monthlySoldBarChartCtx, {
+        type: 'bar',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'Items Sold',
+                data: soldCounts,
+                backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, stepSize: 1 },
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: true }
+            }
+        }
+    });
+
+    // Pie Chart: Top 20 Most Sold Items in the Last 7 Days (updated label and logic)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0); // Set to start of the day 7 days ago
+
+    const weeklySoldItemsData = {};
+
+    items.forEach(item => {
+        if (item.sold > 0 && item.lastSoldDate) { // Ensure there's a lastSoldDate
+            const lastSoldDate = new Date(item.lastSoldDate);
+            if (lastSoldDate >= sevenDaysAgo) { // Check if item was *last sold* within the last 7 days
+                weeklySoldItemsData[item.name] = (weeklySoldItemsData[item.name] || 0) + item.sold;
+            }
+        }
+    });
+
+    // Convert to array and sort by sold quantity (descending)
+    const sortedWeeklySoldItems = Object.entries(weeklySoldItemsData)
+        .sort(([, soldA], [, soldB]) => soldB - soldA);
+
+    // Get top 20
+    const top20WeeklySoldItems = sortedWeeklySoldItems.slice(0, 20);
+
+    const pieLabels = top20WeeklySoldItems.map(entry => entry[0]);
+    const pieValues = top20WeeklySoldItems.map(entry => entry[1]);
+    const pieColors = pieLabels.map(() => `hsl(${Math.random() * 360}, 70%, 60%)`);
+
+    if (soldItemsPieChart) soldItemsPieChart.destroy();
+
+    soldItemsPieChart = new Chart(soldItemsPieChartCtx, {
+        type: 'pie',
+        data: {
+            labels: pieLabels,
+            datasets: [{
+                data: pieValues,
+                backgroundColor: pieColors,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { enabled: true }
+            }
+        }
+    });
+}
+
+// Add item form submit handler
+addItemForm.onsubmit = (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('itemName').value.trim();
+    const brand = document.getElementById('brand').value.trim();
+    const totalQuantity = parseInt(document.getElementById('totalQuantity').value, 10);
+    const sold = parseInt(document.getElementById('sold').value, 10);
+    // Get price from add form - (You will need to add an input for price in your HTML if you want to include it)
+    // const price = parseFloat(document.getElementById('price').value); 
+
+    if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
+        showModalMessage('Please fill all fields correctly.');
+        return;
+    }
+    if (sold > totalQuantity) {
+        showModalMessage('Sold quantity cannot be greater than total quantity.');
+        return;
+    }
+
+    // Check if item name already exists (case-insensitive)
+    if (items.some(i => i.name.toLowerCase() === name.toLowerCase())) {
+        showModalMessage('An item with this name already exists. Please use a different name or duplicate it later.');
+        return;
+    }
+
+    const newItem = {
+        name,
+        brand,
+        totalQuantity,
+        sold,
+        // price: price, // Uncomment if you add price input
+        dateAdded: new Date().toISOString(),
+        lastEdited: new Date().toISOString(), // Initialize lastEdited for new items
+        lastSoldDate: sold > 0 ? new Date().toISOString() : null // Set lastSoldDate if any quantity is sold at creation
+    };
+
+    items.push(newItem);
+    saveItems();
+    refreshUI();
+
+    addItemForm.reset();
+};
+
+// Filters event listeners
+filterNameInput.oninput = refreshUI;
+filterBrandInput.oninput = refreshUI;
+filterStatusSelect.onchange = refreshUI;
+// Date range filter event listeners
+filterStartDateInput.onchange = refreshUI;
+filterEndDateInput.onchange = refreshUI;
+
+// Dark mode toggle
+function loadDarkModeSetting() {
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark');
+        modeToggleBtn.textContent = '☀️';
+    } else {
+        document.body.classList.remove('dark');
+        modeToggleBtn.textContent = '🌙';
+    }
+}
+modeToggleBtn.onclick = () => {
+    document.body.classList.toggle('dark');
+    const darkModeOn = document.body.classList.contains('dark');
+    localStorage.setItem('darkMode', darkModeOn);
+    modeToggleBtn.textContent = darkModeOn ? '☀️' : '🌙';
+};
+
+// --- NEW FUNCTIONALITY ---
+
+// Download Inventory (ZIP)
+downloadZipBtn.onclick = async () => {
+    const zip = new JSZip();
+    const inventoryJson = JSON.stringify(items, null, 2); // Pretty print JSON
+
+    zip.file("inventory_data.json", inventoryJson);
+
+    // Generate the ZIP file
+    const content = await zip.generateAsync({ type: "blob" });
+
+    // Create a download link
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(content);
+    link.download = `inventory_backup_${new Date().toISOString().slice(0, 10)}.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+    showModalMessage('Inventory data downloaded as ZIP!');
+};
+
+// Import Inventory (JSON)
+importJsonBtn.onclick = () => {
+    importJsonFile.click(); // Trigger the hidden file input click
+};
+
+importJsonFile.onchange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                if (Array.isArray(importedData)) {
+                    // Basic validation for imported data structure
+                    const isValid = importedData.every(item =>
+                        typeof item.name === 'string' &&
+                        typeof item.brand === 'string' &&
+                        typeof item.totalQuantity === 'number' &&
+                        typeof item.sold === 'number' &&
+                        typeof item.dateAdded === 'string'
+                    );
+
+                    if (isValid) {
+                        const customConfirm = document.createElement('div');
+                        customConfirm.className = 'modal-message';
+                        customConfirm.innerHTML = `
+                            <p>Importing will overwrite your current inventory. Are you sure?</p>
+                            <button id="confirmYes">Yes</button>
+                            <button id="confirmNo">No</button>
+                        `;
+                        document.body.appendChild(customConfirm);
+
+                        document.getElementById('confirmYes').onclick = () => {
+                            // Ensure imported items have lastEdited and lastSoldDate fields
+                            items = importedData.map(item => ({
+                                ...item,
+                                lastEdited: item.lastEdited || item.dateAdded, // Use existing lastEdited or dateAdded as fallback
+                                lastSoldDate: item.lastSoldDate || null // Ensure lastSoldDate is present, default to null
+                            }));
+                            saveItems();
+                            refreshUI();
+                            customConfirm.remove();
+                            showModalMessage('Inventory data imported successfully!');
+                        };
+                        document.getElementById('confirmNo').onclick = () => {
+                            customConfirm.remove();
+                            showModalMessage('Import cancelled.');
+                        };
+                    } else {
+                        showModalMessage('Invalid JSON file format. Please ensure it contains valid inventory data.');
+                    }
+                } else {
+                    showModalMessage('Invalid JSON file. Expected an array of items.');
+                }
+            } catch (error) {
+                console.error('Error parsing JSON file:', error);
+                showModalMessage('Error reading or parsing the JSON file.');
+            }
+            // Clear the file input to allow re-importing the same file
+            event.target.value = ''; 
+        };
+        reader.readAsText(file);
+    }
+};
+
+// Initial load
+document.addEventListener('DOMContentLoaded', () => {
+    loadDarkModeSetting();
+    refreshUI();
+});
+</script>
+</body>
+</html>

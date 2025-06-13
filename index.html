@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cammy -Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=ABeeZee&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .content {
+            width: 380px;
+            height: 500px;
+       background-color: rgb(0, 110, 255);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(30deg);
+        }
+
+        h1 {
+            color: white;
+            font-family: "ABeeZee", sans-serif;
+            margin-bottom: 50px;
+            text-align: center;
+            font-size: 28px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 30px;
+            margin-left: 20px;
+        }
+
+        input {
+            width: 300px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            padding: 0 15px;
+            font-size: 14px;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input:focus {
+            background-color: white;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .button {
+            width: 300px;
+            height: 45px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(to right, #d68910, #f39c12);
+            cursor: pointer;
+            margin-left: 24px;
+            margin-top: 20px;
+            color: white;
+            font-weight: 500;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            outline: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .button:hover {
+            background: linear-gradient(to right, #b9770e, #d68910);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .button:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+
+        .error-message {
+            color: #000000;
+            font-size: 12px;
+            margin-top: -20px;
+            margin-left: 25px;
+            height: 16px;
+            font-weight: 500;
+        }
+
+        .success-message {
+            color: #4caf50;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Cammy Systems Management</h1>
+        <div class="input-group">
+            <input type="text" id="username" placeholder="Username" autocomplete="username">
+            <div class="error-message" id="username-error"></div>
+        </div>
+        <div class="input-group password-container">
+            <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+            <span class="toggle-password" id="togglePassword">👁️</span>
+            <div class="error-message" id="password-error"></div>
+        </div>
+        <a href="main.html"><button class="button" id="loginBtn">Sign In</button></a>
+        <div class="success-message" id="success-message"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const loginBtn = document.getElementById('loginBtn');
+            const usernameError = document.getElementById('username-error');
+            const passwordError = document.getElementById('password-error');
+            const successMessage = document.getElementById('success-message');
+            const togglePassword = document.getElementById('togglePassword');
+
+            // Toggle password visibility
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.textContent = type === 'password' ? '👁️' : '🔒';
+            });
+
+            // Validate username
+            usernameInput.addEventListener('input', function() {
+                const username = this.value.trim();
+                if (username.length < 4) {
+                    usernameError.textContent = 'Username must be at least 4 characters';
+                } else if (username.length > 20) {
+                    usernameError.textContent = 'Username must be less than 20 characters';
+                } else {
+                    usernameError.textContent = '';
+                }
+            });
+
+            // Validate password
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                if (password.length < 6) {
+                    passwordError.textContent = 'Password must be at least 6 characters';
+                } else if (!/[A-Z]/.test(password)) {
+                    passwordError.textContent = 'Password needs at least one uppercase letter';
+                } else if (!/[0-9]/.test(password)) {
+                    passwordError.textContent = 'Password needs at least one number';
+                } else {
+                    passwordError.textContent = '';
+                }
+            });
+
+            // Login simulation
+            loginBtn.addEventListener('click', function() {
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value;
+
+                // Reset messages
+                successMessage.textContent = '';
+                
+                // Validate fields
+                if (!username) {
+                    usernameError.textContent = 'Username is required';
+                    return;
+                }
+                
+                if (!password) {
+                    passwordError.textContent = 'Password is required';
+                    return;
+                }
+
+                // Simulate login (in a real app, this would be an API call)
+                setTimeout(() => {
+                    // Check against hardcoded credentials (for demo only)
+                    if (username === 'Admin' && password === '789632') {
+                        successMessage.textContent = 'Login successful! Redirecting...';
+                        successMessage.style.color = '#4caf50';
+                        
+                        // Simulate redirect
+                        setTimeout(() => {
+                            alert(`Welcome back, ${username}!`);
+                            // Reset form
+                            usernameInput.value = '';
+                            passwordInput.value = '';
+                            passwordInput.setAttribute('type', 'password');
+                            togglePassword.textContent = '👁️';
+                        }, 1000);
+                    } else {
+                        successMessage.textContent = 'Invalid username or password';
+                        successMessage.style.color = '#ff5252';
+                    }
+                }, 800);
+            });
+
+            // Allow pressing Enter to submit
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loginBtn.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
