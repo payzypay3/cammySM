@@ -104,7 +104,7 @@ body.dark tr:hover {
   background: #333;
 }
 
-/* Styles for low stock (yellow) - between 1 and 5 */
+/* Styles for low stock () - between 1 and 5 */
 #itemTableBody tr.low-stock {
     background-color: #ffc107; /* Light yellow */
     color: #333; /* Darker text for contrast on yellow */
@@ -734,6 +734,7 @@ body.dark-mode .scroll-buttons button:hover {
                 <button id="applySalesLogFilter">Apply Filter</button>
 <button id="last24HoursFilterBtn">Last 24 Hours</button>
                 <button id="clearSalesLogFilter">Clear Filter</button>
+                <button id="mergeItemsBtn">Item With Total</button>
             </div>
 
             <table class="inventory-table sales-log-table">
@@ -763,8 +764,7 @@ body.dark-mode .scroll-buttons button:hover {
    <script>
 
 
-
-// Helper function for displaying modal messages (already present)
+// Helper function for displaying modal messages
 function showModalMessage(message) {
     const messageBox = document.createElement('div');
     messageBox.className = 'modal-message';
@@ -776,35 +776,35 @@ function showModalMessage(message) {
     messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
 }
 
+// --- DOM Element References (Ensure these IDs exist in your HTML) ---
 const addItemForm = document.getElementById('addItemForm');
 const itemTableBody = document.getElementById('itemTableBody');
 const totalItemsCount = document.getElementById('totalItemsCount');
 const totalQuantityCount = document.getElementById('totalQuantityCount');
 const totalSoldCount = document.getElementById('totalSoldCount');
 const totalInStockCount = document.getElementById('totalInStockCount');
-const totalValueCount = document.getElementById('totalValueCount'); // This will now show Total Revenue
-const monthlySoldBarChartCtx = document.getElementById('monthlySoldBarChart').getContext('2d');
-const soldItemsPieChartCtx = document.getElementById('soldItemsPieChart').getContext('2d');
+const totalValueCount = document.getElementById('totalValueCount'); // This will now show Total Revenue (if implemented)
+const monthlySoldBarChartCtx = document.getElementById('monthlySoldBarChart')?.getContext('2d'); // Use optional chaining for robustness
+const soldItemsPieChartCtx = document.getElementById('soldItemsPieChart')?.getContext('2d'); // Use optional chaining for robustness
 const modeToggleBtn = document.getElementById('modeToggleBtn');
 
-// Filter inputs
+// Filter inputs for main inventory table
 const filterNameInput = document.getElementById('filterName');
 const filterBrandInput = document.getElementById('filterBrand');
 const filterStatusSelect = document.getElementById('filterStatus');
-// Date range filter inputs
 const filterStartDateInput = document.getElementById('filterStartDate');
 const filterEndDateInput = document.getElementById('filterEndDate');
 
-// New button references
+// Action buttons for export/import/print
 const downloadZipBtn = document.getElementById('downloadZipBtn');
 const importJsonFile = document.getElementById('importJsonFile');
 const importJsonBtn = document.getElementById('importJsonBtn');
-const printPdfBtn = document.getElementById('printPdfBtn'); // Assuming this button exists in HTML for future PDF functionality
+const printPdfBtn = document.getElementById('printPdfBtn');
 
 // Edit Item Modal elements
 const editItemModal = document.getElementById('editItemModal');
 const editItemForm = document.getElementById('editItemForm');
-const closeButton = editItemModal.querySelector('.close-button');
+const closeButton = editItemModal?.querySelector('.close-button'); // Use optional chaining
 const cancelEditButton = document.getElementById('cancelEdit');
 
 const editItemId = document.getElementById('editItemId');
@@ -813,207 +813,195 @@ const editBrand = document.getElementById('editBrand');
 const editTotalQuantity = document.getElementById('editTotalQuantity');
 const editSold = document.getElementById('editSold');
 
-// Dashboard element for total sold in last 24 hours (now last 1 hour)
-const totalSoldLast24HoursCount = document.getElementById('totalSoldLast24HoursCount'); // Consider renaming HTML ID to totalSoldLast1HourCount
+// Dashboard element for total sold in last 24 hours (or 1 hour, as configured)
+const totalSoldLast24HoursCount = document.getElementById('totalSoldLast24HoursCount');
 
-// --- NEW SALES LOG ELEMENTS ---
+// --- SALES LOG ELEMENTS ---
 const viewSalesLogBtn = document.getElementById('viewSalesLogBtn');
 const salesLogModal = document.getElementById('salesLogModal');
-const closeSalesLogButton = salesLogModal.querySelector('.close-button');
+const closeSalesLogButton = salesLogModal?.querySelector('.close-button'); // Use optional chaining
 const salesLogTableBody = document.getElementById('salesLogTableBody');
 const salesLogStartDateInput = document.getElementById('salesLogStartDate');
 const salesLogEndDateInput = document.getElementById('salesLogEndDate');
 const applySalesLogFilterBtn = document.getElementById('applySalesLogFilter');
 const clearSalesLogFilterBtn = document.getElementById('clearSalesLogFilter');
 
+// Sales Log PDF generation elements (New: assuming salesLogPdfRange is a select element)
+const salesLogPdfRange = document.getElementById('salesLogPdfRange');
+const generateSalesLogPdfBtn = document.getElementById('generateSalesLogPdfBtn');
+const last24HoursFilterBtn = document.getElementById('last24HoursFilterBtn'); // For quick filter button
+
+// Button for merging sales log entries
+const mergeItemsBtn = document.getElementById('mergeItemsBtn');
+
+// Scroll to top/bottom buttons
+const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+
 // Data storage
 let items = JSON.parse(localStorage.getItem('inventoryItems')) || [];
 
-// New global variable to store currently filtered items for PDF generation
+// Global variable to store currently filtered items for PDF generation (main table)
 let filteredItemsForDisplay = [];
 
-// Password for editing/deleting
-const password = '';
+// Global variable to store currently displayed sales log entries for PDF generation
+let filteredSalesLogEntries = [];
+
+// Password for sensitive actions (editing/deleting)
+const password = '789632'; // Consider storing this more securely in a real application
 
 // Chart instances
 let monthlySoldBarChart = null;
 let soldItemsPieChart = null;
 
-// Save items to localStorage
+// --- Data Persistence ---
 function saveItems() {
     localStorage.setItem('inventoryItems', JSON.stringify(items));
 }
 
+// --- Sales Log Functionality ---
+function displaySalesLog() {
+    if (!salesLogTableBody) return; // Exit if sales log table body isn't found
 
+    salesLogTableBody.innerHTML = ''; // Clear previous log entries
 
+    const startDate = salesLogStartDateInput?.value ? new Date(salesLogStartDateInput.value) : null;
+    const endDate = salesLogEndDateInput?.value ? new Date(salesLogEndDateInput.value) : null;
 
+    if (startDate) startDate.setHours(0, 0, 0, 0);
+    if (endDate) endDate.setHours(23, 59, 59, 999);
 
+    let allSalesEntries = [];
 
+    items.forEach(item => {
+        if (item.saleHistory && Array.isArray(item.saleHistory)) {
+            item.saleHistory.forEach(sale => {
+                const saleTimestamp = new Date(sale.timestamp);
+                const matchesDate = (!startDate || saleTimestamp >= startDate) && (!endDate || saleTimestamp <= endDate);
 
+                if (matchesDate) {
+                    allSalesEntries.push({
+                        itemName: item.name,
+                        quantity: sale.quantity,
+                        timestamp: saleTimestamp
+                    });
+                }
+            });
+        }
+    });
 
+    // Sort sales entries by most recent first
+    allSalesEntries.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
+    // Store the filtered sales log entries for PDF generation
+    filteredSalesLogEntries = allSalesEntries;
 
+    if (allSalesEntries.length === 0) {
+        const noDataRow = document.createElement('tr');
+        noDataRow.innerHTML = `<td colspan="3" style="text-align: center;">No sales recorded for the selected period.</td>`;
+        salesLogTableBody.appendChild(noDataRow);
+        return;
+    }
 
-
-
-
-printPdfBtn.onclick = async () => {
-    showModalMessage('Attempting to generate PDF... Please wait.');
-
-    const pdfContent = document.createElement('div');
-    // Removed pdfContent.style.padding = '20mm'; to eliminate internal padding
-
-    const reportTitle = document.createElement('h1');
-    reportTitle.textContent = `Inventory In-Stock Report - ${new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}`;
-    reportTitle.style.textAlign = 'center';
-    reportTitle.style.marginBottom = '20px';
-    // Adjust margin-top for the title if needed, to bring it closer to the top edge of the PDF
-    reportTitle.style.marginTop = '0'; // Ensure no default top margin from H1
-    pdfContent.appendChild(reportTitle);
-
-    const table = document.createElement('table');
-    table.style.width = '100%';
-    table.style.borderCollapse = 'collapse';
-    table.style.marginTop = '0'; // Ensure no default top margin from table
-    
-    // ... (rest of your table creation logic remains the same) ...
+    // Re-create table header for detailed view
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
-    
-    const headers = ['Item Name', 'In Stock Quantity', 'Total Sold', 'Date Added'];
-    headers.forEach(headerText => {
-        const th = document.createElement('th');
-        th.textContent = headerText;
-        th.style.backgroundColor = '#007bff';
-        th.style.color = 'white';
-        th.style.padding = '10px';
-        th.style.border = '1px solid #dee2e6';
-        th.style.textAlign = 'left';
-        headerRow.appendChild(th);
-    });
+    headerRow.innerHTML = `<th>Item Name</th><th>Quantity</th><th>Timestamp</th>`;
     thead.appendChild(headerRow);
-    table.appendChild(thead);
+    // Clear salesLogTableBody, then append thead, then append rows
+    salesLogTableBody.innerHTML = '';
+    salesLogTableBody.appendChild(thead);
 
-    const tbody = document.createElement('tbody');
-    filteredItemsForDisplay.forEach(item => {
+    allSalesEntries.forEach(entry => {
         const tr = document.createElement('tr');
-        const inStockCount = item.totalQuantity - item.sold;
-
-        if (tbody.children.length % 2 === 0) {
-            tr.style.backgroundColor = '#f2f2f2';
-        }
-
-        const tdName = document.createElement('td');
-        tdName.textContent = item.name;
-        tdName.style.padding = '10px';
-        tdName.style.border = '1px solid #dee2e6';
-        tr.appendChild(tdName);
-
-        const tdInStock = document.createElement('td');
-        tdInStock.textContent = inStockCount;
-
-        const tdSold = document.createElement('td');
-        tdSold.textContent = item.sold;
-        tdSold.style.padding = '10px';
-        tdSold.style.border = '1px solid #dee2e6';
-        tr.appendChild(tdSold);
-        tdInStock.style.padding = '10px';
-        tdInStock.style.border = '1px solid #dee2e6';
-        tr.appendChild(tdInStock);
-
-        const tdDateAdded = document.createElement('td');
-        const dateAdded = new Date(item.dateAdded);
-        tdDateAdded.textContent = dateAdded.toLocaleDateString('en-US');
-        tdDateAdded.style.padding = '10px';
-        tdDateAdded.style.border = '1px solid #dee2e6';
-        tr.appendChild(tdDateAdded);
-
-        tbody.appendChild(tr);
+        tr.innerHTML = `
+            <td>${entry.itemName}</td>
+            <td>${entry.quantity}</td>
+            <td>${entry.timestamp.toLocaleString()}</td>
+        `;
+        salesLogTableBody.appendChild(tr);
     });
-    table.appendChild(tbody);
-    pdfContent.appendChild(table);
+}
 
+function displayMergedSalesLog() {
+    if (!salesLogTableBody) return;
 
-    document.body.appendChild(pdfContent); // Temporarily add for html2pdf
+    salesLogTableBody.innerHTML = ''; // Clear existing content
 
-    const options = {
-        margin: 0, // Set margin to 0 for no blanking at the top/sides
-        filename: 'inventory_in_stock_report.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-            scale: 2,
-            logging: true,
-            useCORS: true
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+    const mergedSalesData = {};
 
-    try {
-        await html2pdf().set(options).from(pdfContent).save();
-        showModalMessage('PDF generated and downloaded successfully!');
-    } catch (error) {
-        console.error('PDF Generation Error:', error);
-        showModalMessage(`Failed to generate PDF: ${error.message || 'An unknown error occurred.'}. Check console for details.`);
-    } finally {
-        if (pdfContent && pdfContent.parentNode) {
-            pdfContent.parentNode.removeChild(pdfContent);
+    items.forEach(item => {
+        if (item.saleHistory && Array.isArray(item.saleHistory)) {
+            item.saleHistory.forEach(sale => {
+                const saleTimestamp = new Date(sale.timestamp);
+
+                // Apply date filters if any
+                const startDate = salesLogStartDateInput?.value ? new Date(salesLogStartDateInput.value) : null;
+                const endDate = salesLogEndDateInput?.value ? new Date(salesLogEndDateInput.value) : null;
+                if (startDate) startDate.setHours(0, 0, 0, 0);
+                if (endDate) endDate.setHours(23, 59, 59, 999);
+
+                const matchesDate = (!startDate || saleTimestamp >= startDate) && (!endDate || saleTimestamp <= endDate);
+
+                if (matchesDate) {
+                    mergedSalesData[item.name] = (mergedSalesData[item.name] || 0) + sale.quantity;
+                }
+            });
         }
+    });
+
+    // Convert to an array for sorting and display
+    const mergedSalesEntries = Object.entries(mergedSalesData)
+        .map(([itemName, totalQuantity]) => ({ itemName, totalQuantity }))
+        .sort((a, b) => a.itemName.localeCompare(b.itemName)); // Sort alphabetically by item name
+
+    // Store the merged sales log entries for PDF generation (if needed for a "merged" PDF)
+    filteredSalesLogEntries = mergedSalesEntries; // Overwrite if this view is considered the "filtered" one
+
+    if (mergedSalesEntries.length === 0) {
+        const noDataRow = document.createElement('tr');
+        noDataRow.innerHTML = `<td colspan="2" style="text-align: center;">No sales recorded for the selected period.</td>`;
+        salesLogTableBody.appendChild(noDataRow);
+        return;
     }
-};
 
+    // Create table header for merged view
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    headerRow.innerHTML = `<th>Item Name</th><th>Total Sold Quantity</th>`;
+    thead.appendChild(headerRow);
+    salesLogTableBody.appendChild(thead); // Append thead here
 
-
-
-
-
-// Get references to the new scroll buttons
-const scrollToTopBtn = document.getElementById('scrollToTopBtn');
-const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
-
-// Add event listener for scroll to top button
-if (scrollToTopBtn) {
-    scrollToTopBtn.addEventListener('click', () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth' // Smooth scrolling animation
-        });
-    });
-}
-
-// Add event listener for scroll to bottom button
-if (scrollToBottomBtn) {
-    scrollToBottomBtn.addEventListener('click', () => {
-        window.scrollTo({
-            top: document.body.scrollHeight, // Scrolls to the very bottom of the document
-            behavior: 'smooth' // Smooth scrolling animation
-        });
+    mergedSalesEntries.forEach(entry => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${entry.itemName}</td>
+            <td>${entry.totalQuantity}</td>
+        `;
+        salesLogTableBody.appendChild(tr);
     });
 }
 
 
-
-
-
-
-// Filter & refresh UI function
 function refreshUI() {
-    // Clear table
-    itemTableBody.innerHTML = '';
+    if (!itemTableBody) return; // Exit if main item table body isn't found
 
-    // Get filters
-    const nameFilter = filterNameInput.value.trim().toLowerCase();
-    const brandFilter = filterBrandInput.value.trim().toLowerCase();
-    const statusFilter = filterStatusSelect.value;
+    itemTableBody.innerHTML = ''; // Clear table
 
-    // Get date filters
-    const startDate = filterStartDateInput.value ? new Date(filterStartDateInput.value) : null;
-    const endDate = filterEndDateInput.value ? new Date(filterEndDateInput.value) : null;
+    // Get filter values
+    const nameFilter = filterNameInput?.value.trim().toLowerCase() || '';
+    const brandFilter = filterBrandInput?.value.trim().toLowerCase() || '';
+    const statusFilter = filterStatusSelect?.value || 'all';
+
+    // Get date filters for main table (based on dateAdded)
+    const startDate = filterStartDateInput?.value ? new Date(filterStartDateInput.value) : null;
+    const endDate = filterEndDateInput?.value ? new Date(filterEndDateInput.value) : null;
 
     // Normalize dates to start/end of day for accurate comparison
     if (startDate) startDate.setHours(0, 0, 0, 0);
     if (endDate) endDate.setHours(23, 59, 59, 999);
 
-    // First, filter by name, brand, and date range
+    // First, filter by name, brand, and date added range
     let displayItems = items.filter(item => {
         const matchesName = item.name.toLowerCase().includes(nameFilter);
         const matchesBrand = item.brand.toLowerCase().includes(brandFilter);
@@ -1026,19 +1014,22 @@ function refreshUI() {
         return matchesName && matchesBrand;
     });
 
-    // Then, apply status filtering (inStock/soldOut/lowStock) or sorting (highSold/lowSold/lastEdited/lastSold)
+    // Then, apply status filtering or sorting
     if (statusFilter === 'inStock') {
         displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) > 0);
     } else if (statusFilter === 'soldOut') {
         displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 0);
-    } else if (statusFilter === 'lowStock') { // Low Stock filter logic
-        displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 5);
+    } else if (statusFilter === 'lowStock') { // Low Stock filter logic (e.g., 5 or less in stock)
+        displayItems = displayItems.filter(item => {
+            const inStock = item.totalQuantity - item.sold;
+            return inStock > 0 && inStock <= 5; // Must be in stock but low
+        });
     } else if (statusFilter === 'highSold') {
         displayItems.sort((a, b) => b.sold - a.sold); // Sort by sold quantity (descending)
     } else if (statusFilter === 'lowSold') {
         displayItems.sort((a, b) => a.sold - b.sold); // Sort by sold quantity (ascending)
     } else if (statusFilter === 'lastEdited') {
-        // Sort by lastEdited date (newest first)
+        // Sort by lastEdited date (newest first), falling back to dateAdded if lastEdited is missing
         displayItems.sort((a, b) => new Date(b.lastEdited || b.dateAdded).getTime() - new Date(a.lastEdited || a.dateAdded).getTime());
     } else if (statusFilter === 'lastSold') {
         // Sort by lastSoldDate (newest first), items without lastSoldDate will appear last
@@ -1052,33 +1043,30 @@ function refreshUI() {
     // Store the filtered items in the global variable for PDF generation
     filteredItemsForDisplay = displayItems;
 
+    // Render items to the table
     displayItems.forEach(item => {
         const tr = document.createElement('tr');
-        // In stock count
         const inStockCount = item.totalQuantity - item.sold;
 
-        // Add 'critical-low-stock' class if item is 5 or less
+        // Add 'critical-low-stock' class if item is 0 or less in stock
         if (inStockCount <= 0) {
             tr.classList.add('critical-low-stock');
-        } else if (inStockCount <= 5) { // Add 'low-stock' class if item is between 6 and 15
+        } else if (inStockCount <= 5) { // Add 'low-stock' class if item is between 1 and 5 in stock
             tr.classList.add('low-stock');
         }
 
-        // Calculate Last Sold Quantity within the last 1 hour
+        // Calculate Last Sold Quantity within the last 1 hour for dashboard (configurable)
         const oneHourAgo = new Date(Date.now() - 1 * 60 * 60 * 1000);
         let last1HourSold = 0;
-        // Ensure saleHistory exists and is an array
         if (item.saleHistory && Array.isArray(item.saleHistory)) {
-            // Filter saleHistory to only include sales within the last 1 hour
-            item.saleHistory = item.saleHistory.filter(sale => new Date(sale.timestamp) >= oneHourAgo);
-            last1HourSold = item.saleHistory.reduce((sum, sale) => sum + sale.quantity, 0);
+            const recentSales = item.saleHistory.filter(sale => new Date(sale.timestamp) >= oneHourAgo);
+            last1HourSold = recentSales.reduce((sum, sale) => sum + sale.quantity, 0);
         } else {
-            // Initialize if it doesn't exist (for older data or new items)
-            item.saleHistory = [];
+            item.saleHistory = []; // Ensure saleHistory is an array
         }
 
-        // Display Last Sold Quantity
         const lastSoldQtyDisplay = last1HourSold > 0 ? last1HourSold : 'N/A';
+        const lastEditedDisplay = item.lastEdited ? new Date(item.lastEdited).toLocaleString() : 'N/A';
 
         tr.innerHTML = `
             <td>${item.name}</td>
@@ -1091,7 +1079,7 @@ function refreshUI() {
             </td>
             <td>${inStockCount}</td>
             <td>${lastSoldQtyDisplay}</td>
-            <td>${item.lastEdited ? new Date(item.lastEdited).toLocaleString() : 'N/A'}</td>
+            <td>${lastEditedDisplay}</td>
             <td class="item-actions">
                 <button class="edit" aria-label="Edit all details for ${item.name}">All</button>
                 <button class="edit-qty" aria-label="Edit total quantity for ${item.name}">Qty</button>
@@ -1101,30 +1089,28 @@ function refreshUI() {
             </td>
         `;
 
-        // Sold decrement
+        // --- Event Listeners for Item Actions ---
         tr.querySelector('.sold-dec').onclick = () => {
             if (item.sold > 0) {
                 item.sold--;
-                item.lastEdited = new Date().toISOString(); // Update lastEdited
+                item.lastEdited = new Date().toISOString();
 
-                // When decrementing, remove the *latest* sale of quantity 1 from saleHistory.
-                // This is a common approach to reflect decrements in a history.
+                // Logic to remove the *latest* single sale from history
                 if (item.saleHistory && item.saleHistory.length > 0) {
-                    // Sort sales by timestamp in descending order to easily remove the most recent one
+                    // Sort descending by timestamp to target the latest sale
                     item.saleHistory.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
                     let removed = false;
                     for (let i = 0; i < item.saleHistory.length; i++) {
                         if (item.saleHistory[i].quantity >= 1) {
                             item.saleHistory[i].quantity--;
                             if (item.saleHistory[i].quantity === 0) {
-                                item.saleHistory.splice(i, 1); // Remove entry if quantity becomes 0
+                                item.saleHistory.splice(i, 1);
                             }
                             removed = true;
                             break;
                         }
                     }
-                    // Re-sort ascending after modification if needed for other uses
+                    // Re-sort ascending if you typically maintain it that way
                     item.saleHistory.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
                 }
 
@@ -1132,130 +1118,54 @@ function refreshUI() {
                 refreshUI();
             }
         };
-        // Sold increment
+
         tr.querySelector('.sold-inc').onclick = () => {
             if (inStockCount > 0) {
                 item.sold++;
-                item.lastEdited = new Date().toISOString(); // Update lastEdited
+                item.lastEdited = new Date().toISOString();
                 const now = new Date().toISOString();
-                // Add to saleHistory
                 if (!item.saleHistory) item.saleHistory = [];
                 item.saleHistory.push({ timestamp: now, quantity: 1 });
+                item.lastSoldDate = now; // Update lastSoldDate
                 saveItems();
                 refreshUI();
             }
         };
 
-        // Edit All button with password prompt (opens modal)
         tr.querySelector('.edit').onclick = () => {
             const userPass = prompt('Enter password to edit this item:');
             if (userPass === password) {
                 const itemIndex = items.findIndex(i => i === item);
                 if (itemIndex > -1) {
-                    editItemId.value = itemIndex; // Store the index
-                    editItemName.value = item.name;
-                    editBrand.value = item.brand;
-                    editTotalQuantity.value = item.totalQuantity;
-                    editSold.value = item.sold;
+                    if (editItemId) editItemId.value = itemIndex;
+                    if (editItemName) editItemName.value = item.name;
+                    if (editBrand) editBrand.value = item.brand;
+                    if (editTotalQuantity) editTotalQuantity.value = item.totalQuantity;
+                    if (editSold) editSold.value = item.sold;
 
-                    editItemModal.style.display = 'flex'; // Show the modal (use flex to center)
+                    if (editItemModal) editItemModal.style.display = 'flex';
                 }
             } else {
                 showModalMessage('Wrong password!');
             }
         };
 
-        // Handle edit form submission (inside the modal)
-        editItemForm.onsubmit = (e) => {
-            e.preventDefault();
-            const itemId = parseInt(editItemId.value, 10);
-            if (itemId > -1) {
-                const itemToUpdate = items[itemId];
-                const newName = editItemName.value.trim();
-                const newBrand = editBrand.value.trim();
-                const newTotalQuantity = parseInt(editTotalQuantity.value, 10);
-                const newSold = parseInt(editSold.value, 10);
-
-                // Basic validation
-                if (!newName || !newBrand || isNaN(newTotalQuantity) || isNaN(newSold)) {
-                    showModalMessage('Please fill all fields correctly.');
-                    return;
-                }
-
-                if (newSold > newTotalQuantity) {
-                    showModalMessage('Sold quantity cannot be greater than total quantity.');
-                    return;
-                }
-
-                // Check for duplicate name if the name is changed
-                if (newName.toLowerCase() !== itemToUpdate.name.toLowerCase() && items.some((i, idx) => i.name.toLowerCase() === newName.toLowerCase() && idx !== itemId)) {
-                    showModalMessage('An item with this name already exists. Please choose a different name.');
-                    return;
-                }
-
-                // If sold quantity increased, record in saleHistory
-                if (newSold > itemToUpdate.sold) {
-                    const quantityIncreased = newSold - itemToUpdate.sold;
-                    const now = new Date().toISOString();
-                    if (!itemToUpdate.saleHistory) itemToUpdate.saleHistory = [];
-                    itemToUpdate.saleHistory.push({ timestamp: now, quantity: quantityIncreased });
-                } else if (newSold < itemToUpdate.sold) {
-                    // If sold quantity decreased, we need to try and remove the 'last' sales from saleHistory
-                    const quantityDecreased = itemToUpdate.sold - newSold;
-                    if (itemToUpdate.saleHistory && Array.isArray(itemToUpdate.saleHistory)) {
-                        let remainingToDecrease = quantityDecreased;
-                        // Sort by timestamp descending to remove most recent sales first
-                        itemToUpdate.saleHistory.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-                        const newSaleHistory = [];
-                        for (const sale of itemToUpdate.saleHistory) {
-                            if (remainingToDecrease > 0) {
-                                const reducedFromThisSale = Math.min(sale.quantity, remainingToDecrease);
-                                sale.quantity -= reducedFromThisSale;
-                                remainingToDecrease -= reducedFromThisSale;
-                            }
-                            if (sale.quantity > 0) {
-                                newSaleHistory.push(sale);
-                            }
-                        }
-                        itemToUpdate.saleHistory = newSaleHistory.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // Re-sort ascending
-                    }
-                }
-
-                itemToUpdate.name = newName;
-                itemToUpdate.brand = newBrand;
-                itemToUpdate.totalQuantity = newTotalQuantity;
-                itemToUpdate.sold = newSold;
-                itemToUpdate.lastEdited = new Date().toISOString(); // Update lastEdited on full edit
-
-                saveItems();
-                refreshUI();
-                editItemModal.style.display = 'none'; // Hide modal
-            }
-        };
-
-        // Close modal button
-        closeButton.onclick = () => {
-            editItemModal.style.display = 'none';
-        };
-
-        // Cancel edit button
-        cancelEditButton.onclick = () => {
-            editItemModal.style.display = 'none';
-        };
-
-        // Edit Total Quantity button with password prompt
         tr.querySelector('.edit-qty').onclick = () => {
             const userPass = prompt('Enter password to edit quantity:');
             if (userPass === password) {
-                const quantityToAdd = parseInt(prompt('Enter quantity to add:', 0), 10); // Prompt for quantity to ADD
-                if (isNaN(quantityToAdd) || quantityToAdd < 0) {
-                    showModalMessage('Invalid quantity. Please enter a positive number.');
+                const quantityToAdd = parseInt(prompt('Enter quantity to add (use 0 for no change, negative to remove):', 0), 10);
+                if (isNaN(quantityToAdd)) {
+                    showModalMessage('Invalid quantity. Please enter a number.');
                     return;
                 }
 
                 item.totalQuantity += quantityToAdd;
-                item.lastEdited = new Date().toISOString(); // Update lastEdited when quantity changes
+                // Prevent totalQuantity from going below sold quantity
+                if (item.totalQuantity < item.sold) {
+                    item.totalQuantity = item.sold;
+                    showModalMessage('Total quantity cannot be less than sold quantity. Adjusted total quantity to match sold quantity.');
+                }
+                item.lastEdited = new Date().toISOString();
                 saveItems();
                 refreshUI();
             } else {
@@ -1263,7 +1173,6 @@ function refreshUI() {
             }
         };
 
-        // Sold button with password prompt
         tr.querySelector('.edit-sold').onclick = () => {
             const userPass = prompt('Enter password to edit sold quantity:');
             if (userPass === password) {
@@ -1284,18 +1193,17 @@ function refreshUI() {
                     return;
                 }
 
-                // If sold quantity increased, record in saleHistory
+                // Update saleHistory based on adjustment
                 if (quantityToAdjust > 0) {
                     const now = new Date().toISOString();
                     if (!item.saleHistory) item.saleHistory = [];
                     item.saleHistory.push({ timestamp: now, quantity: quantityToAdjust });
+                    item.lastSoldDate = now;
                 } else if (quantityToAdjust < 0) {
-                    // If sold quantity decreased, try to remove from saleHistory
-                    const actualDecrease = -quantityToAdjust; // Make it a positive number
+                    const actualDecrease = -quantityToAdjust;
                     if (item.saleHistory && Array.isArray(item.saleHistory)) {
                         let remainingToDecrease = actualDecrease;
-                        // Sort by timestamp descending to remove most recent sales first
-                        item.saleHistory.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                        item.saleHistory.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()); // Newest first
 
                         const newSaleHistory = [];
                         for (const sale of item.saleHistory) {
@@ -1308,7 +1216,7 @@ function refreshUI() {
                                 newSaleHistory.push(sale);
                             }
                         }
-                        item.saleHistory = newSaleHistory.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // Re-sort ascending
+                        item.saleHistory = newSaleHistory.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // Oldest first
                     }
                 }
 
@@ -1321,7 +1229,6 @@ function refreshUI() {
             }
         };
 
-        // Delete button with password prompt
         tr.querySelector('.delete').onclick = () => {
             const userPass = prompt('Enter password to delete this item:');
             if (userPass === password) {
@@ -1333,22 +1240,23 @@ function refreshUI() {
             }
         };
 
-        // Duplicate item button
         tr.querySelector('.duplicate').onclick = () => {
             let newName = item.name;
             let counter = 0;
-            while (items.find(i => i.name.toLowerCase() === newName.toLowerCase())) {
+            // Find a unique name for the duplicate
+            while (items.some(i => i.name.toLowerCase() === newName.toLowerCase())) {
                 counter++;
-                newName = item.name + ` - Copy (${counter})`;
+                newName = `${item.name} - Copy (${counter})`;
             }
             items.push({
-                ...item,
+                ...item, // Copy all existing properties
                 name: newName,
-                dateAdded: new Date().toISOString(), // Ensure new date for duplicated item
+                dateAdded: new Date().toISOString(), // New date for duplicated item
                 sold: 0, // Reset sold count for duplicate
-                totalQuantity: item.totalQuantity, // Keep original quantity
+                // totalQuantity: item.totalQuantity, // Keep original quantity (if desired)
                 lastEdited: new Date().toISOString(), // Set lastEdited for duplicated item
                 saleHistory: [], // Reset sale history for duplicated item
+                lastSoldDate: null, // Reset lastSoldDate for duplicate
             });
             saveItems();
             refreshUI();
@@ -1361,42 +1269,51 @@ function refreshUI() {
     updateCharts();
 }
 
-// Dashboard stats
+
 function updateDashboard() {
+    if (!totalItemsCount || !totalQuantityCount || !totalSoldCount || !totalInStockCount || !totalSoldLast24HoursCount) {
+        // console.warn("Dashboard elements not found, skipping updateDashboard.");
+        return; // Exit if dashboard elements are missing
+    }
+
     const totalItems = items.length;
     const totalQuantity = items.reduce((acc, i) => acc + i.totalQuantity, 0);
     const totalSold = items.reduce((acc, i) => acc + i.sold, 0);
     const totalInStock = totalQuantity - totalSold;
 
-    // Calculate total sold in last 1 hour across all items
-    const oneHourAgo = new Date(Date.now() - 1 * 60 * 60 * 1000); // 1 hour in milliseconds
-    const totalSoldLast1Hour = items.reduce((acc, item) => {
+    // Calculate total sold in last 1 hour across all items (as currently configured)
+    const oneHourAgo = new Date(Date.now() - 1 * 60 * 60 * 1000);
+    let totalSoldLast1Hour = 0;
+
+    items.forEach(item => {
         if (item.saleHistory && Array.isArray(item.saleHistory)) {
             const itemSalesLast1Hour = item.saleHistory.filter(sale => new Date(sale.timestamp) >= oneHourAgo);
-            return acc + itemSalesLast1Hour.reduce((sum, sale) => sum + sale.quantity, 0);
+            totalSoldLast1Hour += itemSalesLast1Hour.reduce((sum, sale) => sum + sale.quantity, 0);
         }
-        return acc;
-    }, 0);
-
+    });
 
     totalItemsCount.textContent = totalItems;
     totalQuantityCount.textContent = totalQuantity;
     totalSoldCount.textContent = totalSold;
     totalInStockCount.textContent = totalInStock;
-    totalSoldLast24HoursCount.textContent = totalSoldLast1Hour; // This element now shows 1-hour sales
+    totalSoldLast24HoursCount.textContent = totalSoldLast1Hour; // This element shows 1-hour sales
 }
 
-// Charts update
 function updateCharts() {
+    // Only proceed if chart contexts are available
+    if (!monthlySoldBarChartCtx || !soldItemsPieChartCtx) {
+        // console.warn("Chart canvases not found, skipping chart update.");
+        return;
+    }
+
     // Monthly Sold Bar Chart
     const monthlyData = {};
 
     items.forEach(item => {
-        // Use individual sales from saleHistory for more accurate monthly data
         if (item.saleHistory && Array.isArray(item.saleHistory)) {
             item.saleHistory.forEach(sale => {
                 const d = new Date(sale.timestamp);
-                if (isNaN(d)) return;
+                if (isNaN(d.getTime())) return; // Check for valid date
                 const key = `${d.getFullYear()}-${('0' + (d.getMonth() + 1)).slice(-2)}`;
                 if (!monthlyData[key]) monthlyData[key] = 0;
                 monthlyData[key] += sale.quantity;
@@ -1408,13 +1325,13 @@ function updateCharts() {
 
     const monthLabels = months.map(m => {
         const [year, month] = m.split('-');
-        const date = new Date(year, month - 1);
+        const date = new Date(parseInt(year), parseInt(month) - 1);
         return date.toLocaleString('default', { month: 'short', year: 'numeric' });
     });
 
     const soldCounts = months.map(m => monthlyData[m]);
 
-    if (monthlySoldBarChart) monthlySoldBarChart.destroy();
+    if (monthlySoldBarChart) monthlySoldBarChart.destroy(); // Destroy previous instance
 
     monthlySoldBarChart = new Chart(monthlySoldBarChartCtx, {
         type: 'bar',
@@ -1444,7 +1361,7 @@ function updateCharts() {
     // Pie Chart: Top 20 Most Sold Items in the Last 7 Days
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    sevenDaysAgo.setHours(0, 0, 0, 0); // Set to start of the day 7 days ago
+    sevenDaysAgo.setHours(0, 0, 0, 0);
 
     const weeklySoldItemsData = {};
 
@@ -1452,25 +1369,23 @@ function updateCharts() {
         if (item.saleHistory && Array.isArray(item.saleHistory)) {
             item.saleHistory.forEach(sale => {
                 const saleDate = new Date(sale.timestamp);
-                if (saleDate >= sevenDaysAgo) { // Check if sale occurred within the last 7 days
+                if (saleDate >= sevenDaysAgo) {
                     weeklySoldItemsData[item.name] = (weeklySoldItemsData[item.name] || 0) + sale.quantity;
                 }
             });
         }
     });
 
-    // Convert to array and sort by sold quantity (descending)
     const sortedWeeklySoldItems = Object.entries(weeklySoldItemsData)
         .sort(([, soldA], [, soldB]) => soldB - soldA);
 
-    // Get top 20
     const top20WeeklySoldItems = sortedWeeklySoldItems.slice(0, 20);
 
     const pieLabels = top20WeeklySoldItems.map(entry => entry[0]);
     const pieValues = top20WeeklySoldItems.map(entry => entry[1]);
     const pieColors = pieLabels.map(() => `hsl(${Math.random() * 360}, 70%, 60%)`);
 
-    if (soldItemsPieChart) soldItemsPieChart.destroy();
+    if (soldItemsPieChart) soldItemsPieChart.destroy(); // Destroy previous instance
 
     soldItemsPieChart = new Chart(soldItemsPieChartCtx, {
         type: 'pie',
@@ -1491,364 +1406,556 @@ function updateCharts() {
     });
 }
 
-// Add item form submit handler
-addItemForm.onsubmit = (e) => {
-    e.preventDefault();
+// --- Event Listeners and Initializations ---
 
-    const name = document.getElementById('itemName').value.trim();
-    const brand = document.getElementById('brand').value.trim();
-    const totalQuantity = parseInt(document.getElementById('totalQuantity').value, 10);
-    const sold = parseInt(document.getElementById('sold').value, 10);
-    // Get price from add form - (You will need to add an input for price in your HTML if you want to include it)
-    // const price = parseFloat(document.getElementById('price').value); 
+// Add Item Form Submission
+if (addItemForm) {
+    addItemForm.onsubmit = (e) => {
+        e.preventDefault();
 
-    if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
-        showModalMessage('Please fill all fields correctly.');
-        return;
-    }
-    if (sold > totalQuantity) {
-        showModalMessage('Sold quantity cannot be greater than total quantity.');
-        return;
-    }
+        const nameInput = document.getElementById('itemName');
+        const brandInput = document.getElementById('brand');
+        const totalQuantityInput = document.getElementById('totalQuantity');
+        const soldInput = document.getElementById('sold');
 
-    // Check if item name already exists (case-insensitive)
-    if (items.some(i => i.name.toLowerCase() === name.toLowerCase())) {
-        showModalMessage('An item with this name already exists. Please use a different name or duplicate it later.');
-        return;
-    }
+        if (!nameInput || !brandInput || !totalQuantityInput || !soldInput) {
+            showModalMessage('Missing form input elements.');
+            return;
+        }
 
-    const newItem = {
-        name,
-        brand,
-        totalQuantity,
-        sold,
-        // price: price, // Uncomment if you add price input
-        dateAdded: new Date().toISOString(),
-        lastEdited: new Date().toISOString(), // Initialize lastEdited for new items
-        saleHistory: sold > 0 ? [{ timestamp: new Date().toISOString(), quantity: sold }] : [], // Initialize saleHistory
-    };
+        const name = nameInput.value.trim();
+        const brand = brandInput.value.trim();
+        const totalQuantity = parseInt(totalQuantityInput.value, 10);
+        const sold = parseInt(soldInput.value, 10);
 
-    items.push(newItem);
-    saveItems();
-    refreshUI();
+        if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
+            showModalMessage('Please fill all fields correctly.');
+            return;
+        }
+        if (sold > totalQuantity) {
+            showModalMessage('Sold quantity cannot be greater than total quantity.');
+            return;
+        }
 
-    addItemForm.reset();
-};
+        // Check if item name already exists (case-insensitive)
+        if (items.some(i => i.name.toLowerCase() === name.toLowerCase())) {
+            showModalMessage('An item with this name already exists. Please use a different name or duplicate it later.');
+            return;
+        }
 
-// Filters event listeners
-filterNameInput.oninput = refreshUI;
-filterBrandInput.oninput = refreshUI;
-filterStatusSelect.onchange = refreshUI;
-// Date range filter event listeners
-filterStartDateInput.onchange = refreshUI;
-filterEndDateInput.onchange = refreshUI;
+        const now = new Date().toISOString();
+        const newItem = {
+            name,
+            brand,
+            totalQuantity,
+            sold,
+            dateAdded: now,
+            lastEdited: now,
+            saleHistory: sold > 0 ? [{ timestamp: now, quantity: sold }] : [],
+            lastSoldDate: sold > 0 ? now : null,
+        };
 
-// Dark mode toggle
-function loadDarkModeSetting() {
-    if (localStorage.getItem('darkMode') === 'true') {
-        document.body.classList.add('dark');
-        modeToggleBtn.textContent = '☀️';
-    } else {
-        document.body.classList.remove('dark');
-        modeToggleBtn.textContent = '🌙';
-    }
-}
-modeToggleBtn.onclick = () => {
-    document.body.classList.toggle('dark');
-    const darkModeOn = document.body.classList.contains('dark');
-    localStorage.setItem('darkMode', darkModeOn);
-    modeToggleBtn.textContent = darkModeOn ? '☀️' : '🌙';
-};
-
-// --- NEW FUNCTIONALITY ---
-
-// Download Inventory (ZIP)
-downloadZipBtn.onclick = async () => {
-    const zip = new JSZip();
-    const inventoryJson = JSON.stringify(items, null, 2); // Pretty print JSON
-
-    zip.file("inventory_data.json", inventoryJson);
-
-    // Generate the ZIP file
-    const content = await zip.generateAsync({ type: "blob" });
-
-    // Create a download link
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(content);
-    link.download = `inventory_backup_${new Date().toISOString().slice(0, 10)}.zip`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(link.href);
-    showModalMessage('Inventory data downloaded as ZIP!');
-};
-
-// Import Inventory (JSON)
-importJsonBtn.onclick = () => {
-    importJsonFile.click(); // Trigger the hidden file input click
-};
-
-importJsonFile.onchange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const importedData = JSON.parse(e.target.result);
-                if (Array.isArray(importedData)) {
-                    // Basic validation for imported data structure (checking for required fields)
-                    const isValid = importedData.every(item =>
-                        typeof item.name === 'string' &&
-                        typeof item.brand === 'string' &&
-                        typeof item.totalQuantity === 'number' &&
-                        typeof item.sold === 'number' &&
-                        typeof item.dateAdded === 'string'
-                    );
-
-               if (isValid) {
-    const userConfirmed = window.confirm("Importing will overwrite your current inventory. Are you sure?");
-    
-    if (userConfirmed) {
-        // Ensure imported items have necessary fields, including saleHistory
-        items = importedData.map(item => ({
-            ...item,
-            lastEdited: item.lastEdited || item.dateAdded,
-            saleHistory: Array.isArray(item.saleHistory)
-                ? item.saleHistory
-                : (item.sold > 0
-                    ? [{ timestamp: item.lastSoldDate || item.dateAdded, quantity: item.sold }]
-                    : []),
-            lastSoldDate: undefined,
-            lastSoldQuantity: undefined
-        }));
+        items.push(newItem);
         saveItems();
         refreshUI();
-        showModalMessage('Inventory imported successfully!');
-    } else {
-        showModalMessage('Import cancelled.');
-    }
-} else {
-    showModalMessage('Invalid JSON structure. Please ensure it\'s an array of items with correct properties.');
+
+        addItemForm.reset();
+    };
 }
 
-                } else {
-                    showModalMessage('Invalid JSON file. Expected an array of inventory items.');
+// Import JSON Event Listeners
+if (importJsonBtn && importJsonFile) {
+    importJsonBtn.addEventListener('click', () => {
+        importJsonFile.click(); // Trigger the hidden file input
+    });
+
+    importJsonFile.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (!Array.isArray(importedData)) {
+                        showModalMessage('Invalid JSON file. Expected an array of items.');
+                        return;
+                    }
+
+                    const processedData = importedData.map(item => {
+                        const now = new Date().toISOString();
+                        return {
+                            id: item.id || Date.now() + Math.random(), // Add random for better uniqueness
+                            name: item.name || 'Untitled Item',
+                            brand: item.brand || 'No Brand',
+                            totalQuantity: typeof item.totalQuantity === 'number' ? item.totalQuantity : 0,
+                            sold: typeof item.sold === 'number' ? item.sold : 0,
+                            dateAdded: item.dateAdded || now,
+                            lastEdited: item.lastEdited || now,
+                            saleHistory: Array.isArray(item.saleHistory) ? item.saleHistory : [],
+                            lastSoldDate: item.lastSoldDate || (item.sold > 0 ? now : null)
+                        };
+                    });
+
+                    items = processedData;
+                    showModalMessage('Inventory imported successfully! Refreshing data...');
+
+                    saveItems();
+                    refreshUI();
+                    displaySalesLog(); // Also refresh sales log if it's open
+                } catch (error) {
+                    showModalMessage(`Error reading JSON file: ${error.message}`);
+                    console.error('Error parsing JSON:', error);
                 }
-            } catch (e) {
-                showModalMessage('Error parsing JSON file: ' + e.message);
+            };
+            reader.readAsText(file);
+        }
+    });
+}
+
+// Download ZIP Event Listener
+if (downloadZipBtn) {
+    downloadZipBtn.addEventListener('click', async () => {
+        showModalMessage('Preparing files for download...');
+
+        try {
+            const inventoryData = JSON.stringify(items, null, 2);
+
+            // Ensure JSZip is loaded.
+            if (typeof JSZip === 'undefined') {
+                showModalMessage('JSZip library not found. Please ensure it\'s loaded.');
+                return;
             }
+
+            const zip = new JSZip();
+            zip.file("inventory_data.json", inventoryData);
+
+            const content = await zip.generateAsync({ type: "blob" });
+
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(content);
+            a.download = `inventory_backup_${new Date().toISOString().slice(0, 10)}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showModalMessage('Inventory data downloaded as ZIP!');
+        } catch (error) {
+            console.error('Error zipping files:', error);
+            showModalMessage(`Failed to generate ZIP: ${error.message || 'An unknown error occurred.'}`);
+        }
+    });
+}
+
+// Print PDF Event Listener for Main Inventory Table (Using html2pdf)
+if (printPdfBtn) {
+    printPdfBtn.onclick = async () => {
+        showModalMessage('Attempting to generate Inventory PDF... Please wait.');
+
+        const pdfContent = document.createElement('div');
+        const reportTitle = document.createElement('h1');
+        reportTitle.textContent = `Inventory In-Stock Report - ${new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}`;
+        reportTitle.style.textAlign = 'center';
+        reportTitle.style.marginBottom = '20px';
+        reportTitle.style.marginTop = '0';
+        pdfContent.appendChild(reportTitle);
+
+        const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+        table.style.marginTop = '0';
+        table.style.fontFamily = 'Arial, sans-serif'; // Added for better PDF rendering
+
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+
+        const headers = ['Item Name', 'In Stock Quantity', 'Total Sold', 'Date Added'];
+        headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            th.style.backgroundColor = '#007bff';
+            th.style.color = 'white';
+            th.style.padding = '10px';
+            th.style.border = '1px solid #dee2e6';
+            th.style.textAlign = 'left';
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        if (filteredItemsForDisplay.length === 0) {
+            const noDataRow = document.createElement('tr');
+            noDataRow.innerHTML = `<td colspan="4" style="text-align: center; padding: 10px;">No items to display for the current filter.</td>`;
+            tbody.appendChild(noDataRow);
+        } else {
+            filteredItemsForDisplay.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding: 10px; border: 1px solid #dee2e6;">${item.name}</td>
+                    <td style="padding: 10px; border: 1px solid #dee2e6;">${item.totalQuantity - item.sold}</td>
+                    <td style="padding: 10px; border: 1px solid #dee2e6;">${item.sold}</td>
+                    <td style="padding: 10px; border: 1px solid #dee2e6;">${new Date(item.dateAdded).toLocaleDateString()}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        table.appendChild(tbody);
+        pdfContent.appendChild(table);
+
+        document.body.appendChild(pdfContent); // Temporarily append to DOM for html2pdf
+
+        const options = {
+            margin: 10,
+            filename: `inventory_in_stock_report_${new Date().toISOString().slice(0, 10)}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 2,
+                logging: true,
+                useCORS: true
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-        reader.readAsText(file);
-    }
-};
 
-// --- SALES LOG FUNCTIONALITY ---
+        try {
+            // Ensure html2pdf is loaded. You must include it via <script> tag.
+            if (typeof html2pdf === 'undefined') {
+                showModalMessage('html2pdf.js library not found. Please ensure it\'s loaded.');
+                return;
+            }
+            await html2pdf().set(options).from(pdfContent).save();
+            showModalMessage('Inventory PDF generated and downloaded successfully!');
+        } catch (error) {
+            console.error('Inventory PDF Generation Error:', error);
+            showModalMessage(`Failed to generate Inventory PDF: ${error.message || 'An unknown error occurred.'}. Check console for details.`);
+        } finally {
+            if (pdfContent && pdfContent.parentNode) {
+                pdfContent.parentNode.removeChild(pdfContent);
+            }
+        }
+    };
+}
 
-// Function to populate and display the sales log
-function displaySalesLog(startDate = null, endDate = null) {
-    salesLogTableBody.innerHTML = ''; // Clear existing log
 
-    let allSales = [];
+if (generateSalesLogPdfBtn) {
+    generateSalesLogPdfBtn.onclick = async () => {
+        showModalMessage('Attempting to generate Sales Log PDF... Please wait.');
 
-    // Collect all sales from all items, along with item name and brand
-    items.forEach(item => {
-        if (item.saleHistory && Array.isArray(item.saleHistory)) {
-            item.saleHistory.forEach(sale => {
-                const saleDate = new Date(sale.timestamp);
-                if (
-                    (!startDate || saleDate >= startDate) &&
-                    (!endDate || saleDate <= endDate)
-                ) {
-                    allSales.push({
-                        itemName: item.name,
-                        itemBrand: item.brand,
-                        quantity: sale.quantity,
-                        timestamp: sale.timestamp
+        // This line assumes a select element with id 'salesLogPdfRange' is present.
+        // If not, you might want to default to 'all' or remove this if not needed.
+        const range = salesLogPdfRange?.value || 'all';
+        const now = new Date();
+        const last24 = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+        const pdfContent = document.createElement('div');
+        const title = document.createElement('h2');
+        title.textContent = `Sales Log Report (${range === 'last24' ? 'Last 24 Hours' : 'All Sales'}) - ${now.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}`;
+        title.style.textAlign = 'center';
+        title.style.margin = '20px 0';
+        pdfContent.appendChild(title);
+
+        const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+        table.style.fontFamily = 'Arial, sans-serif'; // Added for better PDF rendering
+
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        // Headers for the sales log: Item Name, Quantity Sold, Timestamp
+        ['Item Name', 'Quantity Sold', 'Timestamp'].forEach(text => {
+            const th = document.createElement('th');
+            th.textContent = text;
+            th.style.border = '1px solid #ccc';
+            th.style.padding = '8px';
+            th.style.background = '#007bff';
+            th.style.color = '#fff';
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        let salesToExport = []; // Will hold the sales entries for the PDF
+
+        if (range === 'last24') {
+            items.forEach(item => {
+                if (item.saleHistory && Array.isArray(item.saleHistory)) {
+                    item.saleHistory.forEach(sale => {
+                        const saleTimestamp = new Date(sale.timestamp);
+                        if (saleTimestamp >= last24 && saleTimestamp <= now) {
+                            salesToExport.push({
+                                itemName: item.name,
+                                quantity: sale.quantity,
+                                timestamp: saleTimestamp
+                            });
+                        }
                     });
                 }
             });
+            salesToExport.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()); // Sort newest first
+        } else { // 'all'
+            // Collect all sales history entries from all items
+            items.forEach(item => {
+                if (item.saleHistory && Array.isArray(item.saleHistory)) {
+                    item.saleHistory.forEach(sale => {
+                        salesToExport.push({
+                            itemName: item.name,
+                            quantity: sale.quantity,
+                            timestamp: new Date(sale.timestamp)
+                        });
+                    });
+                }
+            });
+            salesToExport.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()); // Sort newest first
         }
-    });
 
-    // Sort sales by timestamp, newest first
-    allSales.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        if (salesToExport.length === 0) {
+            const noDataRow = document.createElement('tr');
+            noDataRow.innerHTML = `<td colspan="3" style="text-align: center; padding: 8px;">No sales recorded for this period.</td>`;
+            tbody.appendChild(noDataRow);
+        } else {
+            salesToExport.forEach((entry, index) => {
+                const tr = document.createElement('tr');
+                if (index % 2 === 0) { // Stripe rows
+                    tr.style.backgroundColor = '#f2f2f2';
+                }
+                const tdName = document.createElement('td');
+                tdName.textContent = entry.itemName;
+                tdName.style.border = '1px solid #ccc';
+                tdName.style.padding = '8px';
+                tr.appendChild(tdName);
 
-    if (allSales.length === 0) {
-        const noDataRow = document.createElement('tr');
-        noDataRow.innerHTML = `<td colspan="4" style="text-align: center;">No sales recorded for this period.</td>`;
-        salesLogTableBody.appendChild(noDataRow);
-        return;
-    }
+                const tdQuantity = document.createElement('td');
+                tdQuantity.textContent = entry.quantity;
+                tdQuantity.style.border = '1px solid #ccc';
+                tdQuantity.style.padding = '8px';
+                tr.appendChild(tdQuantity);
 
-    
-const mergedMap = {};
-allSales.forEach(sale => {
-    const key = sale.itemName + '|' + sale.itemBrand;
-    if (!mergedMap[key]) {
-        mergedMap[key] = { ...sale };
-    } else {
-        mergedMap[key].quantity += sale.quantity;
-    }
-});
-Object.values(mergedMap).forEach(sale => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-        <td>${sale.itemName}</td>
-        <td>${sale.itemBrand}</td>
-        <td>${sale.quantity}</td>
-        <td>-</td>
-    `;
-    salesLogTableBody.appendChild(tr);
-});
+                const tdTimestamp = document.createElement('td');
+                tdTimestamp.textContent = entry.timestamp.toLocaleString();
+                tdTimestamp.style.border = '1px solid #ccc';
+                tdTimestamp.style.padding = '8px';
+                tr.appendChild(tdTimestamp);
 
+                tbody.appendChild(tr);
+            });
+        }
+
+        table.appendChild(tbody);
+        pdfContent.appendChild(table);
+        document.body.appendChild(pdfContent); // Temporarily append to DOM for html2pdf
+
+        try {
+            // Ensure html2pdf is loaded. You must include it via <script> tag.
+            if (typeof html2pdf === 'undefined') {
+                showModalMessage('html2pdf.js library not found. Please ensure it\'s loaded.');
+                return;
+            }
+            await html2pdf().set({
+                filename: `sales_log_${range}_${new Date().toISOString().slice(0, 10)}.pdf`,
+                margin: 10,
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(pdfContent).save();
+
+            showModalMessage('Sales Log PDF generated and downloaded successfully!');
+        } catch (error) {
+            console.error('Sales Log PDF Generation Error:', error);
+            showModalMessage(`Failed to generate Sales Log PDF: ${error.message || 'An unknown error occurred.'}. Check console for details.`);
+        } finally {
+            if (pdfContent && pdfContent.parentNode) {
+                document.body.removeChild(pdfContent);
+            }
+        }
+    };
 }
 
-// Event listener for "View Sales Log" button
-viewSalesLogBtn.onclick = () => {
-    // Reset filters and display all sales when opening
-    salesLogStartDateInput.value = '';
-    salesLogEndDateInput.value = '';
-    displaySalesLog(); // Display all sales initially
-    salesLogModal.style.display = 'flex'; // Show the sales log modal
-};
 
-// Event listener for closing the sales log modal
-closeSalesLogButton.onclick = () => {
-    salesLogModal.style.display = 'none'; // Hide the sales log modal
-};
+if (scrollToTopBtn) {
+    scrollToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+}
 
-// Event listener for applying sales log filters
-applySalesLogFilterBtn.onclick = () => {
-    const startDate = salesLogStartDateInput.value ? new Date(salesLogStartDateInput.value) : null;
-    const endDate = salesLogEndDateInput.value ? new Date(salesLogEndDateInput.value) : null;
+if (scrollToBottomBtn) {
+    scrollToBottomBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
+        });
+    });
+}
 
-    // Normalize dates for accurate comparison
-    if (startDate) startDate.setHours(0, 0, 0, 0);
-    if (endDate) endDate.setHours(23, 59, 59, 999);
 
-    if (startDate && endDate && startDate > endDate) {
-        showModalMessage('Start date cannot be after end date.');
-        return;
+function loadDarkModeSetting() {
+    if (localStorage.getItem('mode') === 'dark') {
+        document.body.classList.add('dark-mode');
     }
+}
 
-    displaySalesLog(startDate, endDate);
-};
+if (modeToggleBtn) {
+    modeToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        if (document.body.classList.contains('dark-mode')) {
+            localStorage.setItem('mode', 'dark');
+        } else {
+            localStorage.setItem('mode', 'light');
+        }
+    });
+}
 
-// Event listener for clearing sales log filters
-clearSalesLogFilterBtn.onclick = () => {
-    salesLogStartDateInput.value = '';
-    salesLogEndDateInput.value = '';
-    displaySalesLog(); // Display all sales after clearing filters
-};
-
-
-// Initial load
-
-// Event listener for last 24 hours filter
-document.getElementById('last24HoursFilterBtn').onclick = () => {
-    const now = new Date();
-    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    displaySalesLog(yesterday, now);
-};
 
 document.addEventListener('DOMContentLoaded', () => {
     loadDarkModeSetting();
-    refreshUI();
+    refreshUI(); // Initial refresh of the main inventory table
 
-document.getElementById('generateSalesLogPdfBtn').onclick = async () => {
-    const range = document.getElementById('salesLogPdfRange').value;
-    const now = new Date();
-    const last24 = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    // Attach event listeners for main inventory filter inputs
+    const applyMainFilters = () => refreshUI();
+    filterNameInput?.addEventListener('input', applyMainFilters);
+    filterBrandInput?.addEventListener('input', applyMainFilters);
+    filterStatusSelect?.addEventListener('change', applyMainFilters);
+    filterStartDateInput?.addEventListener('change', applyMainFilters);
+    filterEndDateInput?.addEventListener('change', applyMainFilters);
 
-    const pdfContent = document.createElement('div');
-    const title = document.createElement('h2');
-    title.textContent = 'Sales Log Report (' + (range === 'last24' ? 'Last 24 Hours' : 'All') + ')';
-    title.style.textAlign = 'center';
-    title.style.margin = '20px 0';
-    pdfContent.appendChild(title);
 
-    const table = document.createElement('table');
-    table.style.width = '100%';
-    table.style.borderCollapse = 'collapse';
-
-    const thead = document.createElement('thead');
-    const headerRow = document.createElement('tr');
-    ['Item Name', 'Brand', 'Total Sold'].forEach(text => {
-        const th = document.createElement('th');
-        th.textContent = text;
-        th.style.border = '1px solid #ccc';
-        th.style.padding = '8px';
-        th.style.background = '#007bff';
-        th.style.color = '#fff';
-        headerRow.appendChild(th);
-    });
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
-
-    const tbody = document.createElement('tbody');
-    const mergedSales = {};
-
-    items.forEach(item => {
-        const key = item.name + '|' + item.brand;
-
-        let relevantSales = [];
-if (item.saleHistory && Array.isArray(item.saleHistory)) {
-    if (range === 'last24') {
-        relevantSales = item.saleHistory.filter(sale => new Date(sale.timestamp) >= last24);
-    } else {
-        relevantSales = item.saleHistory; // include all
+    // Event listeners for Sales Log modal
+    if (viewSalesLogBtn) {
+        viewSalesLogBtn.onclick = () => {
+            if (salesLogModal) salesLogModal.style.display = 'flex';
+            if (salesLogStartDateInput) salesLogStartDateInput.value = '';
+            if (salesLogEndDateInput) salesLogEndDateInput.value = '';
+            displaySalesLog(); // Show all logs initially
+        };
     }
-}
-        const quantity = relevantSales.reduce((sum, s) => sum + s.quantity, 0);
 
-        if (quantity > 0) {
-            mergedSales[key] = { name: item.name, brand: item.brand, quantity };
-        }
-    });
+    if (closeSalesLogButton) {
+        closeSalesLogButton.onclick = () => {
+            if (salesLogModal) salesLogModal.style.display = 'none';
+        };
+    }
 
-    Object.values(mergedSales).forEach(row => {
-        const tr = document.createElement('tr');
-        [row.name, row.brand, row.quantity].forEach(text => {
-            const td = document.createElement('td');
-            td.textContent = text;
-            td.style.border = '1px solid #ccc';
-            td.style.padding = '8px';
-            tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-    });
+    if (applySalesLogFilterBtn) {
+        applySalesLogFilterBtn.onclick = displaySalesLog;
+    }
 
-    table.appendChild(tbody);
-    pdfContent.appendChild(table);
-    document.body.appendChild(pdfContent);
+    if (clearSalesLogFilterBtn) {
+        clearSalesLogFilterBtn.onclick = () => {
+            if (salesLogStartDateInput) salesLogStartDateInput.value = '';
+            if (salesLogEndDateInput) salesLogEndDateInput.value = '';
+            displaySalesLog(); // Show all logs again
+        };
+    }
 
-    await html2pdf().set({
-        filename: 'sales_log_' + range + '.pdf',
-        margin: 10,
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    }).from(pdfContent).save();
+    // New button for merging sales log entries
+    if (mergeItemsBtn) {
+        mergeItemsBtn.addEventListener('click', displayMergedSalesLog);
+    }
 
-    document.body.removeChild(pdfContent);
-};
+    // Last 24 Hours quick filter for sales log
+    if (last24HoursFilterBtn) {
+        last24HoursFilterBtn.onclick = () => {
+            const now = new Date();
+            const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
 
+            // Format dates for input fields (YYYY-MM-DD)
+            if (salesLogStartDateInput) salesLogStartDateInput.value = twentyFourHoursAgo.toISOString().slice(0, 10);
+            if (salesLogEndDateInput) salesLogEndDateInput.value = now.toISOString().slice(0, 10);
+            displaySalesLog();
+        };
+    }
+
+    // Handle edit form submission (inside the modal)
+    if (editItemForm) {
+        editItemForm.onsubmit = (e) => {
+            e.preventDefault();
+            const userPass = prompt('Enter password to save changes:');
+            if (userPass === password) {
+                const itemId = parseInt(editItemId.value, 10);
+                if (itemId > -1 && itemId < items.length) {
+                    const itemToUpdate = items[itemId];
+                    const newName = editItemName.value.trim();
+                    const newBrand = editBrand.value.trim();
+                    const newTotalQuantity = parseInt(editTotalQuantity.value, 10);
+                    const newSold = parseInt(editSold.value, 10);
+
+                    if (!newName || !newBrand || isNaN(newTotalQuantity) || isNaN(newSold)) {
+                        showModalMessage('Please fill all fields correctly.');
+                        return;
+                    }
+
+                    if (newSold > newTotalQuantity) {
+                        showModalMessage('Sold quantity cannot be greater than total quantity.');
+                        return;
+                    }
+
+                    // Check for duplicate name if the name is changed
+                    if (newName.toLowerCase() !== itemToUpdate.name.toLowerCase() && items.some((i, idx) => i.name.toLowerCase() === newName.toLowerCase() && idx !== itemId)) {
+                        showModalMessage('An item with this name already exists. Please choose a different name.');
+                        return;
+                    }
+
+                    // If sold quantity increased, record in saleHistory
+                    if (newSold > itemToUpdate.sold) {
+                        const quantityIncreased = newSold - itemToUpdate.sold;
+                        const now = new Date().toISOString();
+                        if (!itemToUpdate.saleHistory) itemToUpdate.saleHistory = [];
+                        itemToUpdate.saleHistory.push({ timestamp: now, quantity: quantityIncreased });
+                        itemToUpdate.lastSoldDate = now;
+                    } else if (newSold < itemToUpdate.sold) {
+                        const quantityDecreased = itemToUpdate.sold - newSold;
+                        if (itemToUpdate.saleHistory && Array.isArray(itemToUpdate.saleHistory)) {
+                            let remainingToDecrease = quantityDecreased;
+                            itemToUpdate.saleHistory.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()); // Newest first
+
+                            const newSaleHistory = [];
+                            for (const sale of itemToUpdate.saleHistory) {
+                                if (remainingToDecrease > 0) {
+                                    const reducedFromThisSale = Math.min(sale.quantity, remainingToDecrease);
+                                    sale.quantity -= reducedFromThisSale;
+                                    remainingToDecrease -= reducedFromThisSale;
+                                }
+                                if (sale.quantity > 0) {
+                                    newSaleHistory.push(sale);
+                                }
+                            }
+                            itemToUpdate.saleHistory = newSaleHistory.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // Oldest first
+                        }
+                    }
+
+                    itemToUpdate.name = newName;
+                    itemToUpdate.brand = newBrand;
+                    itemToUpdate.totalQuantity = newTotalQuantity;
+                    itemToUpdate.sold = newSold;
+                    itemToUpdate.lastEdited = new Date().toISOString();
+
+                    saveItems();
+                    refreshUI();
+                    if (editItemModal) editItemModal.style.display = 'none';
+                }
+            } else {
+                showModalMessage('Wrong password!');
+            }
+        };
+    }
+
+    if (closeButton) {
+        closeButton.onclick = () => {
+            if (editItemModal) editItemModal.style.display = 'none';
+        };
+    }
+
+    if (cancelEditButton) {
+        cancelEditButton.onclick = () => {
+            if (editItemModal) editItemModal.style.display = 'none';
+        };
+    }
 
     // Set up hourly refresh for the dashboard stats
-    setInterval(updateDashboard, 60 * 60 * 1000); // Refresh every 1 hour (60 minutes * 60 seconds * 1000 milliseconds)
+    setInterval(updateDashboard, 60 * 60 * 1000); // Refresh every 1 hour
 });
-</script>
 
-<script>
-document.getElementById('salesLogPdfRange').addEventListener('change', () => {
-    const range = document.getElementById('salesLogPdfRange').value;
-    const now = new Date();
-    if (range === 'last24') {
-        const last24 = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        displaySalesLog(last24, now);
-    } else {
-        displaySalesLog();
-    }
-});
+
 </script>
 
 </body>
